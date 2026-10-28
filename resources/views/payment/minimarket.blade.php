@@ -32,6 +32,8 @@
 .mm-price-row{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.5rem;font-size:0.92rem;color:#444}
 .mm-price-row .price-label{color:#555}
 .mm-price-row .price-val{font-weight:800;color:#333;font-size:1.15rem}
+.va-btn-bayar{width:100%;background:#284b25;color:#fff;border:none;padding:0.75rem;border-radius:0.4rem;font-size:0.95rem;font-weight:700;cursor:pointer;transition:0.2s;text-align:center}
+.va-btn-bayar:hover{background:#1e391c}
 .va-btn-outline{width:100%;background:transparent;color:#334d2f;border:1.5px solid #334d2f;padding:0.75rem;border-radius:0.4rem;font-size:0.95rem;font-weight:700;cursor:pointer;transition:0.2s;text-align:center}
 .va-btn-outline:hover{background:#334d2f;color:#fff}
 .sidebar-card-cream{background:#f1e5cc;border-radius:1rem;border:1px solid #dfd4be;padding:1.5rem;margin-bottom:1rem;box-shadow:0 10px 25px rgba(0,0,0,0.05);overflow:hidden}
@@ -88,7 +90,7 @@
                 </div>
 
                 <div class="pay-alert-bar">
-                    Cek emailmu (<strong id="userEmailSpan">{{ $booking->pemesan_email ?? 'xxxxxx@gmail.com' }}</strong>) sekarang untuk detail cara bayar.
+                    Cek emailmu (<strong id="userEmailSpan">{{ $booking->pemesan_email ?? 'tamu@landeuh.com' }}</strong>) sekarang untuk detail cara bayar.
                 </div>
 
                 {{-- Judul section --}}
@@ -99,23 +101,23 @@
                 {{-- Kartu kode bayar --}}
                 <div class="mm-card">
                     <div class="mm-card-header">
-                        <span class="mm-name" id="dynMmName">Alfamart/Alfamidi</span>
+                        <span class="mm-name" id="dynMmName">Alfamart / Alfamidi</span>
                         <div style="height:32px; display:flex; align-items:center; justify-content:flex-end;">
-                            <img id="dynMmLogo" src="{{ asset('images/partner-pembayaran/bni.png') }}" alt="" style="height:26px;object-fit:contain;">
+                            <img id="dynMmLogo" src="{{ asset('images/partner-pembayaran/alfamart.png') }}" alt="" style="height:26px;object-fit:contain;">
                         </div>
                     </div>
 
                     <div class="mm-code-section">
                         <div class="mm-code-label" id="dynMmCodeLabel">Kode Pembayaran di Alfamart</div>
-                        <div class="mm-code-value" id="dynMmCode">XXXXXX</div>
+                        <div class="mm-code-value" id="dynMmCode">111088294172</div>
                     </div>
 
                     <div class="mm-howto">
                         <div class="mm-howto-title" id="dynMmHowtoTitle">Cara Bayar di Alfamart</div>
                         <ol id="dynMmSteps">
-                            <li>Sampaikan pada kasir Alfamart bahwa Anda hendak membayar transaksi Traveloka.</li>
-                            <li>Tunjukkan Kode Pembayaran Anda (bukan No. Pesanan Traveloka) ke kasir.</li>
-                            <li>Biaya tambahan sebesar Rp2.500/transaksi di luar harga total, akan dikenakan oleh pihak Alfamart.</li>
+                            <li>Sampaikan pada kasir Alfamart bahwa Anda hendak membayar transaksi Landeuh Village Riverside.</li>
+                            <li>Tunjukkan Kode Pembayaran Anda (111088294172) ke kasir.</li>
+                            <li>Biaya tambahan transaksi mungkin dikenakan sesuai kebijakan pihak minimarket.</li>
                         </ol>
                     </div>
 
@@ -123,7 +125,7 @@
 
                     <div class="mm-price-row">
                         <span class="price-label">Harga sebelum biaya admin</span>
-                        <span class="price-val" id="dynMmHarga">{{ isset($booking) ? 'IDR ' . number_format($booking->total, 0, ',', '.') : 'IDR 921.609' }}</span>
+                        <span class="price-val" id="dynMmHarga">{{ isset($booking) ? 'IDR ' . number_format($booking->total, 0, ',', '.') : 'IDR 1.600.000' }}</span>
                     </div>
                 </div>
 
@@ -135,7 +137,7 @@
                     <p style="font-size:0.9rem;color:#555;margin-bottom:1.5rem;">
                         Setelah pembayaran berhasil terverifikasi, e-ticket dan bukti pembayaran akan kami kirimkan ke email Anda.
                     </p>
-                    <button class="va-btn-outline" onclick="goToKonfirmasi('success')">
+                    <button class="va-btn-outline" style="width:100%; background:#3a523a; color:#fff; cursor:pointer; font-weight:700;" onclick="cekStatusPembayaran(this)">
                         Cek Status Pembayaran
                     </button>
                 </div>
@@ -239,29 +241,31 @@
 <script>
 const MM_DATA = {
     alfamart: {
-        name: 'Alfamart/Alfamidi',
-        logo: '{{ asset("images/partner-pembayaran/bni.png") }}',
+        name: 'Alfamart / Alfamidi',
+        logo: '{{ asset("images/partner-pembayaran/alfamart.png") }}',
         codeLabel: 'Kode Pembayaran di Alfamart',
-        codeValue: 'XXXXXX',
+        codeValue: '111088294172',
         howtoTitle: 'Cara Bayar di Alfamart',
         sectionTitle: 'Tunjukkan Kode Bayar di Kasir Alfamart',
         steps: [
-            'Sampaikan pada kasir Alfamart bahwa Anda hendak membayar transaksi Traveloka.',
-            'Tunjukkan Kode Pembayaran Anda (bukan No. Pesanan Traveloka) ke kasir.',
-            'Biaya tambahan sebesar Rp2.500/transaksi di luar harga total, akan dikenakan oleh pihak Alfamart.'
+            'Sampaikan pada kasir Alfamart bahwa Anda hendak membayar transaksi Landeuh Village Riverside.',
+            'Tunjukkan Kode Pembayaran: <strong>111088294172</strong> ke kasir.',
+            'Lakukan pembayaran sesuai nominal tagihan yang tertera.',
+            'Simpan bukti struk pembayaran sebagai tanda bukti resmi.'
         ]
     },
     indomaret: {
         name: 'Indomaret',
-        logo: '{{ asset("images/partner-pembayaran/bni.png") }}',
+        logo: '{{ asset("images/partner-pembayaran/indomaret.png") }}',
         codeLabel: 'Kode Pembayaran di Indomaret',
-        codeValue: 'XXXXXX',
+        codeValue: 'TG8892147102',
         howtoTitle: 'Cara Bayar di Indomaret',
         sectionTitle: 'Tunjukkan Kode Bayar di Kasir Indomaret',
         steps: [
-            'Sampaikan pada kasir Indomaret bahwa Anda hendak membayar transaksi Traveloka.',
-            'Tunjukkan Kode Pembayaran Anda (bukan No. Pesanan Traveloka) ke kasir.',
-            'Biaya tambahan sebesar Rp2.500/transaksi di luar harga total, akan dikenakan oleh pihak Indomaret.'
+            'Sampaikan pada kasir Indomaret bahwa Anda hendak membayar transaksi Landeuh Village Riverside.',
+            'Tunjukkan Kode Pembayaran: <strong>TG8892147102</strong> ke kasir.',
+            'Lakukan pembayaran sesuai nominal yang tertera.',
+            'Simpan struk pembayaran sebagai tanda bukti resmi.'
         ]
     }
 };
@@ -349,13 +353,26 @@ const MM_DATA = {
     }
 })();
 
-function goToKonfirmasi(status) {
-    sessionStorage.setItem('res_payment_status', status);
+function cekStatusPembayaran(btn) {
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+        btn.innerText = 'Memeriksa Status Pembayaran...';
+    }
+
+    const resetBtn = () => {
+        if (btn) {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.innerText = 'Cek Status Pembayaran';
+        }
+    };
+
     const bookingNo = sessionStorage.getItem('res_booking_no') || '{{ $booking->no_pesanan ?? "" }}';
     const method = sessionStorage.getItem('res_payment_method') || sessionStorage.getItem('res_market') || 'Minimarket';
 
     if (bookingNo) {
-        fetch('/reservasi/update-status', {
+        fetch('/reservasi/check-payment-status', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -363,14 +380,21 @@ function goToKonfirmasi(status) {
             },
             body: JSON.stringify({
                 no_pesanan: bookingNo,
-                status: 'success',
                 metode_pembayaran: method
             })
-        }).finally(() => {
-            window.location.href = `/reservasi/konfirmasi?booking_no=${encodeURIComponent(bookingNo)}&status=success`;
+        })
+        .then(res => res.json())
+        .then(data => {
+            const st = (data.status === 'success') ? 'success' : (data.status === 'failed' ? 'failed' : 'pending');
+            sessionStorage.setItem('res_payment_status', st);
+            window.location.href = `/reservasi/konfirmasi?booking_no=${encodeURIComponent(bookingNo)}&status=${st}`;
+        })
+        .catch(err => {
+            sessionStorage.setItem('res_payment_status', 'pending');
+            window.location.href = `/reservasi/konfirmasi?booking_no=${encodeURIComponent(bookingNo)}&status=pending`;
         });
     } else {
-        window.location.href = '/reservasi/konfirmasi?status=success';
+        window.location.href = '/reservasi/konfirmasi?status=pending';
     }
 }
 </script>

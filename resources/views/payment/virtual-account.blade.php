@@ -91,16 +91,16 @@
                 </div>
                 
                 <div class="pay-alert-bar">
-                    Cek emailmu (<strong id="userEmailSpan">{{ $booking->pemesan_email ?? 'xxxxxx@gmail.com' }}</strong>) sekarang untuk detail cara bayar.
+                    Cek emailmu (<strong id="userEmailSpan">{{ $booking->pemesan_email ?? 'tamu@landeuh.com' }}</strong>) sekarang untuk detail cara bayar.
                 </div>
                 
                 <h3 style="font-size:1.15rem; font-weight:800; color:#333; margin-bottom:0.8rem;">Mohon transfer ke</h3>
                 
                 <div class="va-card">
                     <div class="va-title">
-                        <span id="dynVaName">BRI Virtual Account</span>
+                        <span id="dynVaName">BCA Virtual Account</span>
                         <div style="height:36px; display:flex; align-items:center; justify-content:flex-end;">
-                            <img id="dynVaLogo" src="{{ asset('images/partner-pembayaran/bri.png') }}" alt="Logo" style="height:32px; object-fit:contain;">
+                            <img id="dynVaLogo" src="{{ asset('images/partner-pembayaran/bca.png') }}" alt="Logo" style="height:32px; object-fit:contain;">
                         </div>
                     </div>
                     
@@ -108,27 +108,26 @@
                         <div class="va-input-group">
                             <label>No. Virtual Account</label>
                             <div class="va-input-wrapper">
-                                <input type="text" class="va-input" id="dynVaNumber" value="xxxxxxxxxxxxxxxxxx" readonly>
+                                <input type="text" class="va-input" id="dynVaNumber" value="756831007064407324" readonly>
                                 <button type="button" class="va-copy-btn" onclick="copyText('dynVaNumber')">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375H9.75" /></svg>
                                 </button>
                             </div>
                         </div>
                         <div class="va-input-group">
                             <label>Nama Penerima</label>
-                            <input type="text" class="va-input" id="dynNamaPenerima" value="ABC DEFGHIJKLMN" readonly>
+                            <input type="text" class="va-input" id="dynNamaPenerima" value="OVY RESIYANA" readonly>
                         </div>
                     </div>
                 </div>
 
                 <div class="va-card" style="padding:1.2rem 1.5rem; margin-bottom:1.5rem;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:1.5rem; margin-bottom:1rem;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:1.5rem; margin-bottom:0;">
                         <label style="font-size:0.95rem; font-weight:700; color:#333; margin:0; white-space:nowrap;">Jumlah Transfer</label>
                         <div style="flex:1; max-width:380px;">
-                            <input type="text" class="va-input" id="dynTransferAmount" value="{{ isset($booking) ? number_format($booking->total, 0, ',', '.') : '921.609' }}" readonly style="font-size:1.05rem; font-weight:700; color:#333; padding:0.65rem 1rem;">
+                            <input type="text" class="va-input" id="dynTransferAmount" value="{{ isset($booking) ? number_format($booking->total, 0, ',', '.') : '1.600.000' }}" readonly style="font-size:1.05rem; font-weight:700; color:#333; padding:0.65rem 1rem;">
                         </div>
                     </div>
-                    <button type="button" class="va-btn-bayar" onclick="goToKonfirmasi('success')">Bayar</button>
                 </div>
                 
                 <h3 style="font-size:1.15rem; font-weight:800; color:#333; margin-bottom:0.8rem;">Bagaimana Cara Transfer</h3>
@@ -139,7 +138,7 @@
                 <h3 style="font-size:1.15rem; font-weight:800; color:#333; margin-bottom:0.8rem; margin-top:2rem;">Sudah selesai bayar?</h3>
                 <div class="va-card-confirm">
                     <p style="font-size:0.9rem; color:#555; margin-bottom:1.5rem;">Setelah pembayaran berhasil terverifikasi, e-ticket dan bukti pembayaran akan kami kirimkan ke email Anda.</p>
-                    <button class="va-btn-outline" onclick="goToKonfirmasi('success')">Cek Status Pembayaran</button>
+                    <button class="va-btn-outline" style="width:100%; background:#3a523a; color:#fff; cursor:pointer; font-weight:700;" onclick="cekStatusPembayaran(this)">Cek Status Pembayaran</button>
                 </div>
             </div>
 
@@ -229,97 +228,70 @@ const VA_DATA = {
     'BCA Virtual Account': {
         logo: 'bca.png',
         name: 'BCA Virtual Account',
-        account: '3901234567890123',
+        account: '756831007064407324',
         instructions: [
             {
-                title: 'BCA Mobile',
+                title: 'BCA Mobile (m-BCA)',
                 steps: [
                     'Buka aplikasi BCA mobile, pilih m-BCA dan masukkan kode akses Anda.',
                     'Pilih m-Transfer > BCA Virtual Account.',
-                    'Masukkan nomor Virtual Account yang tertera lalu pilih Send.',
-                    'Periksa kembali rincian pembayaran Anda, lalu masukkan PIN m-BCA.',
-                    'Transaksi selesai. Simpan bukti pembayaran jika diperlukan.'
+                    'Masukkan nomor Virtual Account: <strong>756831007064407324</strong> lalu pilih Send.',
+                    'Periksa kembali rincian pembayaran, pastikan nama penerima sesuai, lalu masukkan PIN m-BCA.',
+                    'Transaksi selesai. Simpan bukti transfer Anda.'
                 ]
             },
             {
-                title: 'KlikBCA',
+                title: 'KlikBCA & ATM BCA',
                 steps: [
-                    'Login ke KlikBCA Individual.',
-                    'Pilih Transfer Dana > Transfer ke BCA Virtual Account.',
-                    'Masukkan nomor Virtual Account.',
-                    'Pastikan detail pembayaran sudah sesuai.',
-                    'Masukkan respon KeyBCA APPLI 1 untuk menyelesaikan transaksi.'
-                ]
-            },
-            {
-                title: 'ATM BCA',
-                steps: [
-                    'Masukkan kartu ATM BCA dan PIN Anda.',
+                    'Masukkan kartu ATM BCA dan PIN Anda (atau login ke KlikBCA).',
                     'Pilih menu Transaksi Lainnya > Transfer > ke Rekening BCA Virtual Account.',
-                    'Masukkan nomor Virtual Account.',
-                    'Periksa kembali rincian pembayaran dan konfirmasi transaksi.'
+                    'Masukkan nomor Virtual Account: <strong>756831007064407324</strong>.',
+                    'Periksa kembali jumlah tagihan dan konfirmasi transaksi.'
                 ]
             }
         ]
     },
     'Mandiri Virtual Account': {
         logo: 'mandiri.png',
-        name: 'Mandiri Virtual Account',
-        account: '8901234567890123',
+        name: 'Mandiri Virtual Account / Bill Payment',
+        account: '7001299000123456',
+        billerCode: '70012',
+        billKey: '99000123456',
         instructions: [
             {
-                title: 'Livin\' by Mandiri',
+                title: 'Livin\' by Mandiri / ATM Mandiri',
                 steps: [
-                    'Buka aplikasi Livin\' by Mandiri dan login.',
-                    'Pilih menu Bayar > Buat Pembayaran Baru > Multipayment.',
-                    'Masukkan nomor Virtual Account atau pilih penyedia jasa yang sesuai.',
-                    'Pastikan detail tagihan benar, lalu masukkan PIN Livin\' Anda.',
-                    'Pembayaran selesai.'
-                ]
-            },
-            {
-                title: 'ATM Mandiri',
-                steps: [
-                    'Masukkan kartu ATM Mandiri dan PIN Anda.',
-                    'Pilih menu Bayar/Beli > Lainnya > Multipayment.',
-                    'Masukkan kode perusahaan dan nomor Virtual Account.',
-                    'Konfirmasi pembayaran sesuai detail yang tertera di layar.'
+                    'Buka Livin\' by Mandiri atau gunakan ATM Mandiri.',
+                    'Pilih menu Bayar / Multipayment.',
+                    'Masukkan Kode Perusahaan (Biller Code): <strong>70012</strong>.',
+                    'Masukkan No. Pembayaran (Bill Key): <strong>99000123456</strong> atau Nomor VA: <strong>7001299000123456</strong>.',
+                    'Pastikan detail tagihan sudah sesuai, lalu konfirmasi pembayaran dengan PIN Anda.'
                 ]
             }
         ]
     },
     'BRI Virtual Account': {
         logo: 'bri.png',
-        name: 'BRI Virtual Account',
-        account: '123456789012345',
+        name: 'BRI Virtual Account (BRIVA)',
+        account: '8578100706440732',
         instructions: [
             {
-                title: 'BRImo',
+                title: 'BRImo (Mobile Banking BRI)',
                 steps: [
-                    'Buka aplikasi BRImo, lalu masuk dengan akunmu.',
+                    'Buka aplikasi BRImo, lalu masuk dengan akun Anda.',
                     'Pilih menu BRIVA.',
-                    'Masukkan nomor Virtual Account yang tertera lalu pilih Lanjutkan.',
-                    'Pastikan informasi sudah sesuai: nama Penerima beserta total tagihanmu.',
-                    'Masukkan PIN BRImo kamu untuk menyelesaikan pembayaran.',
-                    'Pembayaran selesai. Simpan notifikasi pembayaran sebagai referensi.'
-                ]
-            },
-            {
-                title: 'Internet Banking',
-                steps: [
-                    'Login ke Internet Banking BRI.',
-                    'Pilih menu Pembayaran > BRIVA.',
-                    'Masukkan nomor BRIVA yang tertera.',
-                    'Masukkan password dan mToken untuk melanjutkan transaksi.'
+                    'Masukkan nomor Virtual Account: <strong>8578100706440732</strong> lalu pilih Lanjutkan.',
+                    'Pastikan informasi nama penerima dan nominal tagihan sesuai.',
+                    'Masukkan PIN BRImo Anda untuk menyelesaikan pembayaran.'
                 ]
             },
             {
                 title: 'ATM BRI',
                 steps: [
                     'Masukkan kartu ATM BRI dan PIN Anda.',
-                    'Pilih menu Transaksi Lainnya > Pembayaran > BRIVA.',
-                    'Masukkan nomor BRIVA yang tertera.',
-                    'Konfirmasi pembayaran dan simpan struk.'
+                    'Pilih Transaksi Lain > Pembayaran > Lainnya > BRIVA.',
+                    'Masukkan nomor Virtual Account: <strong>8578100706440732</strong>.',
+                    'Periksa rincian tagihan dan konfirmasi pembayaran.'
                 ]
             }
         ]
@@ -327,24 +299,16 @@ const VA_DATA = {
     'BNI Virtual Account': {
         logo: 'bni.png',
         name: 'BNI Virtual Account',
-        account: '8201234567890123',
+        account: '8808100706440732',
         instructions: [
             {
-                title: 'BNI Mobile Banking',
+                title: 'BNI Mobile Banking / ATM BNI',
                 steps: [
-                    'Buka aplikasi BNI Mobile Banking dan login.',
+                    'Buka aplikasi BNI Mobile Banking atau masukkan kartu di ATM BNI.',
                     'Pilih menu Transfer > Virtual Account Billing.',
-                    'Pilih Input Baru dan masukkan nomor Virtual Account.',
-                    'Pastikan tagihan sesuai dan masukkan Password Transaksi.'
-                ]
-            },
-            {
-                title: 'ATM BNI',
-                steps: [
-                    'Masukkan kartu ATM BNI dan PIN.',
-                    'Pilih Menu Lain > Transfer > Virtual Account Billing.',
-                    'Masukkan nomor Virtual Account.',
-                    'Konfirmasi pembayaran.'
+                    'Masukkan nomor Virtual Account BNI: <strong>8808100706440732</strong>.',
+                    'Pastikan rincian tagihan sudah cocok dan masukkan Password Transaksi / PIN.',
+                    'Pembayaran selesai.'
                 ]
             }
         ]
@@ -352,41 +316,40 @@ const VA_DATA = {
     'BSI Virtual Account': {
         logo: 'bsi.png',
         name: 'BSI Virtual Account',
-        account: '9001234567890123',
+        account: '9008100706440732',
         instructions: [
             {
                 title: 'BSI Mobile',
                 steps: [
                     'Buka aplikasi BSI Mobile dan login.',
-                    'Pilih menu Bayar > Institusi/Akademik.',
-                    'Masukkan nomor Virtual Account.',
-                    'Konfirmasi nominal dan masukkan PIN.'
+                    'Pilih menu Bayar > Institusi / Virtual Account.',
+                    'Masukkan nomor Virtual Account BSI: <strong>9008100706440732</strong>.',
+                    'Konfirmasi nominal dan masukkan PIN BSI Anda.'
                 ]
             },
             {
                 title: 'ATM BSI',
                 steps: [
                     'Masukkan kartu ATM BSI dan PIN Anda.',
-                    'Pilih menu Pembayaran/Pembelian.',
-                    'Pilih Institusi/Akademik.',
-                    'Masukkan nomor Virtual Account dan ikuti instruksi selanjutnya.'
+                    'Pilih menu Pembayaran/Pembelian > Institusi.',
+                    'Masukkan nomor Virtual Account BSI: <strong>9008100706440732</strong>.',
+                    'Konfirmasi pembayaran dan simpan struk.'
                 ]
             }
         ]
     },
     'Virtual Account Lainnya': {
         logo: 'va.png',
-        name: 'Virtual Account',
-        account: '0000123456789012',
+        name: 'Permata Virtual Account',
+        account: '8778100706440732',
         instructions: [
             {
-                title: 'Transfer Antar Bank',
+                title: 'Transfer Antar Bank (ATM / Mobile Banking)',
                 steps: [
                     'Pilih menu Transfer Antar Bank pada ATM/Mobile Banking Anda.',
-                    'Pilih bank tujuan dan masukkan kode bank.',
-                    'Masukkan nomor Virtual Account sebagai rekening tujuan.',
-                    'Masukkan nominal pembayaran yang sesuai.',
-                    'Konfirmasi transaksi.'
+                    'Pilih bank tujuan: Bank Permata (Kode Bank: 013).',
+                    'Masukkan nomor Virtual Account: <strong>8778100706440732</strong> sebagai rekening tujuan.',
+                    'Masukkan nominal pembayaran yang sesuai dan konfirmasi transaksi.'
                 ]
             }
         ]
@@ -465,8 +428,8 @@ const VA_DATA = {
     }
 
     // Load VA Data
-    const selectedVa = sessionStorage.getItem('res_va') || 'BRI Virtual Account';
-    const vaInfo = VA_DATA[selectedVa] || VA_DATA['BRI Virtual Account'] || VA_DATA['Virtual Account Lainnya'];
+    const selectedVa = sessionStorage.getItem('res_va') || 'BCA Virtual Account';
+    const vaInfo = VA_DATA[selectedVa] || VA_DATA['BCA Virtual Account'] || VA_DATA['BRI Virtual Account'] || VA_DATA['Virtual Account Lainnya'];
 
     document.getElementById('dynVaName').textContent = vaInfo.name;
     const logoEl = document.getElementById('dynVaLogo');
@@ -483,6 +446,10 @@ const VA_DATA = {
     logoEl.style.height = logoSizes[selectedVa] || '32px';
 
     document.getElementById('dynVaNumber').value = vaInfo.account;
+    const dynNamaPenerimaEl = document.getElementById('dynNamaPenerima');
+    if (dynNamaPenerimaEl) {
+        dynNamaPenerimaEl.value = 'OVY RESIYANA';
+    }
     
     // Render Instructions
     const instContainer = document.getElementById('dynInstructions');
@@ -506,13 +473,26 @@ const VA_DATA = {
     instContainer.innerHTML = instHtml;
 })();
 
-function goToKonfirmasi(status) {
-    sessionStorage.setItem('res_payment_status', status);
+function cekStatusPembayaran(btn) {
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+        btn.innerText = 'Memeriksa Status Pembayaran...';
+    }
+
+    const resetBtn = () => {
+        if (btn) {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.innerText = 'Cek Status Pembayaran';
+        }
+    };
+
     const bookingNo = sessionStorage.getItem('res_booking_no') || '{{ $booking->no_pesanan ?? "" }}';
     const method = sessionStorage.getItem('res_payment_method') || sessionStorage.getItem('res_va') || 'Virtual Account';
 
     if (bookingNo) {
-        fetch('/reservasi/update-status', {
+        fetch('/reservasi/check-payment-status', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -520,14 +500,21 @@ function goToKonfirmasi(status) {
             },
             body: JSON.stringify({
                 no_pesanan: bookingNo,
-                status: 'success',
                 metode_pembayaran: method
             })
-        }).finally(() => {
-            window.location.href = `/reservasi/konfirmasi?booking_no=${encodeURIComponent(bookingNo)}&status=success`;
+        })
+        .then(res => res.json())
+        .then(data => {
+            const st = (data.status === 'success') ? 'success' : (data.status === 'failed' ? 'failed' : 'pending');
+            sessionStorage.setItem('res_payment_status', st);
+            window.location.href = `/reservasi/konfirmasi?booking_no=${encodeURIComponent(bookingNo)}&status=${st}`;
+        })
+        .catch(err => {
+            sessionStorage.setItem('res_payment_status', 'pending');
+            window.location.href = `/reservasi/konfirmasi?booking_no=${encodeURIComponent(bookingNo)}&status=pending`;
         });
     } else {
-        window.location.href = '/reservasi/konfirmasi?status=success';
+        window.location.href = '/reservasi/konfirmasi?status=pending';
     }
 }
 </script>

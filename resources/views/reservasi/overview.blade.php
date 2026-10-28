@@ -784,9 +784,17 @@ function closeValidationModal() {
             },
             body: JSON.stringify(payload)
         })
-        .then(response => {
+        .then(async response => {
+            const isJson = response.headers.get('content-type')?.includes('application/json');
             if(!response.ok) {
-                return response.json().then(err => { throw err; });
+                if (isJson) {
+                    const err = await response.json();
+                    throw err;
+                }
+                throw new Error('Server mengembalikan kesalahan (HTTP ' + response.status + '). Pastikan database MySQL aktif.');
+            }
+            if (!isJson) {
+                throw new Error('Respon server bukan format JSON.');
             }
             return response.json();
         })
@@ -822,7 +830,7 @@ function closeValidationModal() {
                 sessionStorage.setItem('res_created_at', data.booking.created_at);
 
                 setTimeout(() => {
-                    window.location.href = '/reservasi/metode-pembayaran/' + akoId;
+                    window.location.href = '/reservasi/metode-pembayaran/' + akoId + '?booking_no=' + encodeURIComponent(data.booking.no_pesanan);
                 }, 1000);
             } else {
                 alert('Gagal: ' + data.message);

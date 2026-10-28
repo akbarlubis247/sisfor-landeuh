@@ -133,7 +133,7 @@
 
     <div class="max-w-7xl mx-auto px-4 py-1 relative z-10">
         <div class="pay-back" onclick="window.location.href = '/pesanan'">← Kembali</div>
-        <div class="pay-timer-bar"><span class="whitespace-nowrap">Selesaikan pembayaran dalam</span> <span class="timer shrink-0" id="countdownTimer">00:30:00</span></div>
+        <div class="pay-timer-bar"><span class="whitespace-nowrap">Selesaikan pembayaran dalam</span> <span class="timer shrink-0" id="countdownTimer">23:59:59</span></div>
 
         <div class="pay-grid" style="display:flex;gap:1.5rem;align-items:flex-start;width:100%">
             {{-- LEFT --}}
@@ -224,13 +224,28 @@
                                 @endif
                                 @if(!empty($m['cc']))
                                 <div class="cc-fields" style="margin-top:0.5rem">
-                                    <div><label style="font-size:0.8rem;font-weight:600">Nomor Kartu Kredit/Debit</label><input type="text" placeholder="Nomor Kartu Kredit / Debit"></div>
+                                    <div style="background:#eaf4ea; border:1px solid #b7dcb7; padding:0.5rem 0.75rem; border-radius:0.4rem; font-size:0.75rem; color:#2e5b2e; margin-bottom:0.25rem;">
+                                        <strong>💡 Midtrans Sandbox Test Card:</strong> Visa <code>4811 1111 1111 1114</code> | Exp <code>12/28</code> | CVV <code>123</code> | OTP <code>112233</code>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:0.8rem;font-weight:600">Nomor Kartu Kredit/Debit</label>
+                                        <input type="text" id="ccNumber" value="4811 1111 1111 1114" placeholder="4811 1111 1111 1114">
+                                    </div>
                                     <div class="row" style="align-items:flex-end">
-                                        <div style="flex:1"><label style="font-size:0.8rem;font-weight:600">Masa Berlaku</label><input type="text" placeholder="MM / YY"></div>
-                                        <div style="flex:1"><label style="font-size:0.8rem;font-weight:600">CVV/CVN</label><input type="text" placeholder="3 - 4 Digit"></div>
+                                        <div style="flex:1">
+                                            <label style="font-size:0.8rem;font-weight:600">Masa Berlaku</label>
+                                            <input type="text" id="ccExp" value="12 / 28" placeholder="MM / YY">
+                                        </div>
+                                        <div style="flex:1">
+                                            <label style="font-size:0.8rem;font-weight:600">CVV/CVN</label>
+                                            <input type="text" id="ccCvv" value="123" placeholder="123">
+                                        </div>
                                         <div style="flex-shrink:0"><img src="{{ asset('images/partner-pembayaran/cvv.png') }}" alt="CVV" style="height:45px;object-fit:contain" onerror="this.style.display='none'"></div>
                                     </div>
-                                    <div><label style="font-size:0.8rem;font-weight:600">Nama di Kartu</label><input type="text" placeholder="Nama yang Tertera di Kartu"></div>
+                                    <div>
+                                        <label style="font-size:0.8rem;font-weight:600">Nama di Kartu</label>
+                                        <input type="text" id="ccName" value="{{ $booking->pemesan_nama ?? 'Ari Rahman' }}" placeholder="Nama yang Tertera di Kartu">
+                                    </div>
                                 </div>
                                 @endif
                             </div>
@@ -391,12 +406,12 @@ function processPayment() {
     const akoId = parseInt(urlParts[urlParts.length - 1]) || 1;
     sessionStorage.setItem('res_akoId', akoId);
 
-    // Ambil No Pesanan yang tersimpan dari database MySQL
-    const bookingNo = sessionStorage.getItem('res_booking_no') || '{{ $booking->no_pesanan ?? "" }}';
-    
-    if(!bookingNo) {
-        alert("Terjadi kesalahan. Nomor pesanan tidak ditemukan.");
-        return;
+    // Ambil No Pesanan yang tersimpan dari database MySQL atau URL atau sessionStorage
+    let bookingNo = sessionStorage.getItem('res_booking_no') || '{{ $booking->no_pesanan ?? "" }}';
+    if (!bookingNo) {
+        const urlParams = new URLSearchParams(window.location.search);
+        bookingNo = urlParams.get('booking_no') || 'LDH-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+        sessionStorage.setItem('res_booking_no', bookingNo);
     }
 
     isSubmittingPayment = true;
@@ -413,15 +428,16 @@ function processPayment() {
         btn.style.opacity = '1';
     }
 
-    // Periksa metode pembayaran kustom (VA Bank, ATM, QRIS, Minimarket)
+    // Periksa metode pembayaran kustom (VA Bank, ATM, QRIS, Minimarket, E-Wallet)
     const methodClean = (method || '').trim();
     const methodLower = methodClean.toLowerCase();
     const isVa = methodLower.includes('virtual account') || methodLower.includes('va') || methodLower.includes('bca') || methodLower.includes('bri') || methodLower.includes('bni') || methodLower.includes('mandiri') || methodLower.includes('bsi');
     const isAtm = methodLower.includes('atm');
     const isQris = methodLower.includes('qris');
     const isMinimarket = methodLower.includes('alfamart') || methodLower.includes('indomaret') || methodLower.includes('minimarket') || methodLower.includes('alfamidi');
+    const isWallet = methodLower.includes('dana') || methodLower.includes('gopay') || methodLower.includes('ovo') || methodLower.includes('shopeepay') || methodLower.includes('wallet') || methodLower.includes('e-wallet');
 
-    if (isVa || isAtm || isQris || isMinimarket) {
+    if (isVa || isAtm || isQris || isMinimarket || isWallet) {
         sessionStorage.setItem('res_payment_method', methodClean);
         
         let targetUrl = '';
@@ -435,6 +451,9 @@ function processPayment() {
         } else if (isMinimarket) {
             sessionStorage.setItem('res_market', methodClean);
             targetUrl = `/payment/minimarket?booking_no=${encodeURIComponent(bookingNo)}&market=${encodeURIComponent(methodClean)}`;
+        } else if (isWallet) {
+            sessionStorage.setItem('res_wallet', methodClean);
+            targetUrl = `/payment/e-wallet?booking_no=${encodeURIComponent(bookingNo)}&wallet=${encodeURIComponent(methodClean)}`;
         }
 
         // Update status pending ke backend
@@ -484,6 +503,7 @@ function processPayment() {
         else if(mLower.includes('qris')) fallbackUrl = `/payment/qris?booking_no=${encodeURIComponent(bookingNo)}`;
         else if(mLower.includes('va') || mLower.includes('virtual account')) fallbackUrl = `/payment/virtual-account?booking_no=${encodeURIComponent(bookingNo)}&va=${encodeURIComponent(method)}`;
         else if(mLower.includes('alfamart') || mLower.includes('indomaret') || mLower.includes('minimarket')) fallbackUrl = `/payment/minimarket?booking_no=${encodeURIComponent(bookingNo)}&market=${encodeURIComponent(method)}`;
+        else if(mLower.includes('dana') || mLower.includes('gopay') || mLower.includes('ovo') || mLower.includes('shopeepay') || mLower.includes('wallet')) fallbackUrl = `/payment/e-wallet?booking_no=${encodeURIComponent(bookingNo)}&wallet=${encodeURIComponent(method)}`;
 
         if(data.success && data.snap_token) {
             // Panggil Popup Midtrans Snap
@@ -503,7 +523,9 @@ function processPayment() {
                     },
                     onClose: function(){
                         resetBtn();
-                        alert('Anda menutup halaman pembayaran sebelum menyelesaikannya.');
+                        if (confirm('Anda menutup jendela pembayaran sebelum menyelesaikannya.\n\nPesanan Anda (No. ' + bookingNo + ') tetap tersimpan di tab "Belum Dibayar".\n\nApakah Anda ingin melihat pesanan Anda di menu "Pesanan Saya"?')) {
+                            window.location.href = '/pesanan';
+                        }
                     }
                 });
             } catch (snapErr) {
@@ -519,6 +541,20 @@ function processPayment() {
                 window.location.href = fallbackUrl;
                 return;
             }
+            if (mLower.includes('kartu') || mLower.includes('credit')) {
+                const otp = prompt("Midtrans 3D Secure Authentication Simulator\n\nMasukkan 6-digit kode OTP simulasi Midtrans Sandbox:\n(Kode OTP Uji Coba: 112233)", "112233");
+                if (otp === "112233") {
+                    updateBookingStatus(bookingNo, 'success', 'Kartu Kredit / Debit');
+                    return;
+                } else if (otp === null) {
+                    resetBtn();
+                    return;
+                } else {
+                    alert("Kode OTP salah! Kode OTP valid di Midtrans Sandbox adalah: 112233");
+                    resetBtn();
+                    return;
+                }
+            }
             // Jika metode pembayaran lain yang memang butuh Midtrans
             if (confirm("Gagal terhubung ke Midtrans Simulator!\n\nKemungkinan API Key Midtrans (Server/Client Key) di pengaturan (.env) Anda belum terkonfigurasi atau salah.\n\nPesan Error: " + (data.message || "Unknown error") + "\n\nApakah Anda ingin diarahkan ke halaman Konfirmasi dengan status 'pending'?")) {
                 window.location.href = `/reservasi/konfirmasi?booking_no=${bookingNo}&status=pending`;
@@ -532,6 +568,16 @@ function processPayment() {
         if(mLower.includes('qris')) { window.location.href = `/payment/qris?booking_no=${encodeURIComponent(bookingNo)}`; return; }
         if(mLower.includes('va') || mLower.includes('virtual account')) { window.location.href = `/payment/virtual-account?booking_no=${encodeURIComponent(bookingNo)}&va=${encodeURIComponent(method)}`; return; }
         if(mLower.includes('alfamart') || mLower.includes('indomaret') || mLower.includes('minimarket')) { window.location.href = `/payment/minimarket?booking_no=${encodeURIComponent(bookingNo)}&market=${encodeURIComponent(method)}`; return; }
+        if(mLower.includes('dana') || mLower.includes('gopay') || mLower.includes('ovo') || mLower.includes('shopeepay') || mLower.includes('wallet')) { window.location.href = `/payment/e-wallet?booking_no=${encodeURIComponent(bookingNo)}&wallet=${encodeURIComponent(method)}`; return; }
+        if (mLower.includes('kartu') || mLower.includes('credit')) {
+            const otp = prompt("Midtrans 3D Secure Authentication Simulator\n\nMasukkan 6-digit kode OTP simulasi Midtrans Sandbox:\n(Kode OTP Uji Coba: 112233)", "112233");
+            if (otp === "112233") {
+                updateBookingStatus(bookingNo, 'success', 'Kartu Kredit / Debit');
+                return;
+            } else {
+                return;
+            }
+        }
 
         if (confirm("Terjadi kesalahan sistem saat menghubungi server Midtrans: " + err.message + "\n\nApakah Anda ingin diarahkan ke halaman Konfirmasi dengan status 'pending'?")) {
              window.location.href = `/reservasi/konfirmasi?booking_no=${bookingNo}&status=pending`;
@@ -631,7 +677,7 @@ function updateBookingStatus(bookingNo, status, method, result) {
     const createdAtStr = sessionStorage.getItem('res_created_at');
     if (createdAtStr) {
         const createdTime = new Date(createdAtStr).getTime();
-        expireTime = createdTime + 30 * 60 * 1000;
+        expireTime = createdTime + 24 * 60 * 60 * 1000;
     }
 
     const el = document.getElementById('countdownTimer');
@@ -643,8 +689,8 @@ function updateBookingStatus(bookingNo, status, method, result) {
         if (expireTime > 0) {
             seconds = Math.max(0, Math.floor((expireTime - now) / 1000));
         } else {
-            // Fallback for missing data
-            seconds = 30 * 60;
+            // Fallback for missing data: 24 hours
+            seconds = 24 * 60 * 60;
         }
 
         if (seconds <= 0 && expireTime > 0) {
@@ -688,9 +734,10 @@ function updateBookingStatus(bookingNo, status, method, result) {
             return true; // indicates timer finished
         }
         
-        const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+        const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
         const s = String(seconds % 60).padStart(2, '0');
-        el.textContent = '00:' + m + ':' + s;
+        el.textContent = `${h}:${m}:${s}`;
         return false;
     }
     

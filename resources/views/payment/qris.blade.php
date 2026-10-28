@@ -20,6 +20,8 @@
 .va-card{background:#f1e5cc;border-radius:0.75rem;border:1px solid #dfd4be;margin-bottom:1.5rem;padding:1.5rem}
 .va-card-confirm{background:#f1e5cc;border-radius:0.75rem;border:1px solid #dfd4be;margin-bottom:1.5rem;padding:1.5rem}
 .va-title{font-size:1.15rem;font-weight:800;color:#333;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #dfd4be;padding-bottom:1rem;margin-bottom:1.2rem}
+.va-btn-bayar{width:100%;background:#284b25;color:#fff;border:none;padding:0.75rem;border-radius:0.4rem;font-size:0.95rem;font-weight:700;cursor:pointer;transition:0.2s;text-align:center}
+.va-btn-bayar:hover{background:#1e391c}
 .va-btn-outline{width:100%;background:transparent;color:#334d2f;border:1.5px solid #334d2f;padding:0.75rem;border-radius:0.4rem;font-size:0.95rem;font-weight:700;cursor:pointer;transition:0.2s;text-align:center}
 .va-btn-outline:hover{background:#334d2f;color:#fff}
 
@@ -95,7 +97,7 @@
                 </div>
 
                 <div class="pay-alert-bar">
-                    Cek emailmu (<strong id="userEmailSpan">{{ $booking->pemesan_email ?? 'xxxxxx@gmail.com' }}</strong>) sekarang untuk detail cara bayar.
+                    Cek emailmu (<strong id="userEmailSpan">{{ $booking->pemesan_email ?? 'tamu@landeuh.com' }}</strong>) sekarang untuk detail cara bayar.
                 </div>
 
                 <h3 style="font-size:1.15rem;font-weight:800;color:#333;margin-bottom:0.8rem;">Scan atau unduh QR code</h3>
@@ -113,24 +115,30 @@
                             <img id="dynQrisImage" src="{{ asset('images/partner-pembayaran/qris-code.png') }}" alt="QR Code QRIS">
                         </div>
 
-                        <a href="javascript:void(0)" class="qris-download-btn" onclick="downloadQris()">
-                            Unduh QR Code
-                        </a>
+                        <div style="display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap; margin-top:0.75rem;">
+                            <a href="javascript:void(0)" class="qris-download-btn" onclick="downloadQris()" style="margin:0;">
+                                Unduh QR Code
+                            </a>
+                        </div>
+
+                        <div style="width:100%; max-width:320px; margin:0.8rem auto 0; background:#f9fbf9; border:1px solid #e8efe8; border-radius:8px; padding:0.6rem 1rem; display:flex; justify-content:space-between; align-items:center; font-size:0.9rem;">
+                            <span style="color:#666; font-weight:600;">Nama Penerima:</span>
+                            <span style="font-weight:700; color:#1d3822;">OVY RESIYANA</span>
+                        </div>
 
                         <div class="how-to-box">
                             <strong>Cara Bayar QRIS</strong>
                             <ol>
-                                <li>Buka aplikasi e-Money di handphone (Gojek, LinkAja, OVO, BCA Mobile, Shopee, &amp; DANA).</li>
-                                <li>Klik ikon bayar lalu scan kode QR.</li>
-                                <li>Pastikan jumlah pembayaran sesuai, lalu klik bayar.</li>
-                                <li>Masukkan PIN untuk melanjutkan pembayaran.</li>
-                                <li>Setelah pembayaran selesai, halaman akan pindah secara otomatis ke status pembayaran.</li>
+                                <li>Buka aplikasi e-Money atau Mobile Banking Anda (Gojek, OVO, BCA Mobile, ShopeePay, DANA, dll).</li>
+                                <li>Pilih menu Scan / Bayar lalu pindai kode QR di atas.</li>
+                                <li>Periksa rincian jumlah transfer dan nama penerima (pastikan tertera <strong>OVY RESIYANA</strong>), lalu konfirmasi pembayaran.</li>
+                                <li>Setelah pembayaran selesai, klik tombol di bawah untuk verifikasi.</li>
                             </ol>
                         </div>
 
                         <div class="qris-amount-row">
                             <span class="qris-amount-label">Jumlah transfer</span>
-                            <span class="qris-amount-value" id="dynTransferAmount">{{ isset($booking) ? 'IDR ' . number_format($booking->total, 0, ',', '.') : 'IDR 921.609' }}</span>
+                            <span class="qris-amount-value" id="dynTransferAmount">{{ isset($booking) ? 'IDR ' . number_format($booking->total, 0, ',', '.') : 'IDR 1.600.000' }}</span>
                         </div>
                     </div>
                 </div>
@@ -138,7 +146,7 @@
                 <h3 style="font-size:1.15rem;font-weight:800;color:#333;margin-bottom:0.8rem;margin-top:1.5rem;">Sudah selesai bayar?</h3>
                 <div class="va-card-confirm">
                     <p style="font-size:0.9rem;color:#555;margin-bottom:1.5rem;">Setelah pembayaran berhasil terverifikasi, e-ticket dan bukti pembayaran akan kami kirimkan ke email Anda.</p>
-                    <button class="va-btn-outline" onclick="goToKonfirmasi('success')">Cek Status Pembayaran</button>
+                    <button class="va-btn-outline" style="width:100%; background:#3a523a; color:#fff; cursor:pointer; font-weight:700;" onclick="cekStatusPembayaran(this)">Cek Status Pembayaran</button>
                 </div>
 
             </div>
@@ -315,13 +323,26 @@ function downloadQris() {
     link.click();
 }
 
-function goToKonfirmasi(status) {
-    sessionStorage.setItem('res_payment_status', status);
+function cekStatusPembayaran(btn) {
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+        btn.innerText = 'Memeriksa Status Pembayaran...';
+    }
+
+    const resetBtn = () => {
+        if (btn) {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.innerText = 'Cek Status Pembayaran';
+        }
+    };
+
     const bookingNo = sessionStorage.getItem('res_booking_no') || '{{ $booking->no_pesanan ?? "" }}';
     const method = sessionStorage.getItem('res_payment_method') || 'QRIS';
 
     if (bookingNo) {
-        fetch('/reservasi/update-status', {
+        fetch('/reservasi/check-payment-status', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -329,14 +350,21 @@ function goToKonfirmasi(status) {
             },
             body: JSON.stringify({
                 no_pesanan: bookingNo,
-                status: 'success',
                 metode_pembayaran: method
             })
-        }).finally(() => {
-            window.location.href = `/reservasi/konfirmasi?booking_no=${encodeURIComponent(bookingNo)}&status=success`;
+        })
+        .then(res => res.json())
+        .then(data => {
+            const st = (data.status === 'success') ? 'success' : (data.status === 'failed' ? 'failed' : 'pending');
+            sessionStorage.setItem('res_payment_status', st);
+            window.location.href = `/reservasi/konfirmasi?booking_no=${encodeURIComponent(bookingNo)}&status=${st}`;
+        })
+        .catch(err => {
+            sessionStorage.setItem('res_payment_status', 'pending');
+            window.location.href = `/reservasi/konfirmasi?booking_no=${encodeURIComponent(bookingNo)}&status=pending`;
         });
     } else {
-        window.location.href = '/reservasi/konfirmasi?status=success';
+        window.location.href = '/reservasi/konfirmasi?status=pending';
     }
 }
 </script>

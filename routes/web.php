@@ -108,7 +108,18 @@ Route::get('/debug-wa-status', function (\Illuminate\Http\Request $request) {
 Route::get('/pesanan', function () {
     $bookings = [];
     if (Auth::check()) {
-        $bookings = \App\Models\Booking::where('pemesan_email', Auth::user()->email)
+        $user = Auth::user();
+        $userEmail = trim(strtolower($user->email ?? ''));
+        $userName = trim($user->name ?? '');
+
+        $bookings = \App\Models\Booking::where(function($q) use ($userEmail, $userName) {
+                if (!empty($userEmail)) {
+                    $q->whereRaw('LOWER(TRIM(pemesan_email)) = ?', [$userEmail]);
+                }
+                if (!empty($userName)) {
+                    $q->orWhere('pemesan_nama', $userName);
+                }
+            })
             ->with(['accommodation', 'corporatePackage'])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -178,6 +189,7 @@ Route::get('/reservasi/overview/{id}', function (Illuminate\Http\Request $reques
 Route::post('/reservasi/store', [ReservasiController::class, 'store'])->name('reservasi.store');
 Route::post('/reservasi/get-snap-token', [ReservasiController::class, 'getSnapToken'])->name('reservasi.snap-token');
 Route::post('/reservasi/update-status', [ReservasiController::class, 'updateStatus'])->name('reservasi.update-status');
+Route::post('/reservasi/check-payment-status', [ReservasiController::class, 'checkPaymentStatus'])->name('reservasi.check-payment-status');
 Route::get('/invoice/{no_pesanan}/download', [ReservasiController::class, 'downloadInvoice'])->name('invoice.download');
 Route::post('/reservasi/reschedule', [ReservasiController::class, 'submitReschedule'])->name('reservasi.reschedule');
 Route::get('/reservasi/booked-dates/{id}', [ReservasiController::class, 'getBookedDates'])->name('reservasi.booked-dates');
@@ -187,6 +199,16 @@ Route::get('/reservasi/metode-pembayaran/{id}', function (Illuminate\Http\Reques
     $bookingNo = $request->query('booking_no') ?? $request->query('order_id');
     if ($bookingNo) {
         $booking = \App\Models\Booking::where('no_pesanan', $bookingNo)->with(['accommodation', 'corporatePackage'])->first();
+    } elseif (Auth::check()) {
+        $user = Auth::user();
+        $userEmail = trim(strtolower($user->email ?? ''));
+        $booking = \App\Models\Booking::where(function($q) use ($userEmail, $user) {
+                if (!empty($userEmail)) $q->whereRaw('LOWER(TRIM(pemesan_email)) = ?', [$userEmail]);
+                if (!empty($user->name)) $q->orWhere('pemesan_nama', $user->name);
+            })
+            ->orderBy('id', 'desc')
+            ->with(['accommodation', 'corporatePackage'])
+            ->first();
     }
     return response()
         ->view('reservasi.metode', ['id' => $id, 'booking' => $booking])
@@ -200,6 +222,16 @@ Route::get('/payment/virtual-account', function (Illuminate\Http\Request $reques
     $bookingNo = $request->query('booking_no') ?? $request->query('order_id');
     if ($bookingNo) {
         $booking = \App\Models\Booking::where('no_pesanan', $bookingNo)->with(['accommodation', 'corporatePackage'])->first();
+    } elseif (Auth::check()) {
+        $user = Auth::user();
+        $userEmail = trim(strtolower($user->email ?? ''));
+        $booking = \App\Models\Booking::where(function($q) use ($userEmail, $user) {
+                if (!empty($userEmail)) $q->whereRaw('LOWER(TRIM(pemesan_email)) = ?', [$userEmail]);
+                if (!empty($user->name)) $q->orWhere('pemesan_nama', $user->name);
+            })
+            ->orderBy('id', 'desc')
+            ->with(['accommodation', 'corporatePackage'])
+            ->first();
     }
     return view('payment.virtual-account', compact('booking'));
 })->name('payment.virtual-account');
@@ -209,6 +241,16 @@ Route::get('/payment/atm', function (Illuminate\Http\Request $request) {
     $bookingNo = $request->query('booking_no') ?? $request->query('order_id');
     if ($bookingNo) {
         $booking = \App\Models\Booking::where('no_pesanan', $bookingNo)->with(['accommodation', 'corporatePackage'])->first();
+    } elseif (Auth::check()) {
+        $user = Auth::user();
+        $userEmail = trim(strtolower($user->email ?? ''));
+        $booking = \App\Models\Booking::where(function($q) use ($userEmail, $user) {
+                if (!empty($userEmail)) $q->whereRaw('LOWER(TRIM(pemesan_email)) = ?', [$userEmail]);
+                if (!empty($user->name)) $q->orWhere('pemesan_nama', $user->name);
+            })
+            ->orderBy('id', 'desc')
+            ->with(['accommodation', 'corporatePackage'])
+            ->first();
     }
     return view('payment.atm', compact('booking'));
 })->name('payment.atm');
@@ -218,6 +260,16 @@ Route::get('/payment/minimarket', function (Illuminate\Http\Request $request) {
     $bookingNo = $request->query('booking_no') ?? $request->query('order_id');
     if ($bookingNo) {
         $booking = \App\Models\Booking::where('no_pesanan', $bookingNo)->with(['accommodation', 'corporatePackage'])->first();
+    } elseif (Auth::check()) {
+        $user = Auth::user();
+        $userEmail = trim(strtolower($user->email ?? ''));
+        $booking = \App\Models\Booking::where(function($q) use ($userEmail, $user) {
+                if (!empty($userEmail)) $q->whereRaw('LOWER(TRIM(pemesan_email)) = ?', [$userEmail]);
+                if (!empty($user->name)) $q->orWhere('pemesan_nama', $user->name);
+            })
+            ->orderBy('id', 'desc')
+            ->with(['accommodation', 'corporatePackage'])
+            ->first();
     }
     return view('payment.minimarket', compact('booking'));
 })->name('payment.minimarket');
@@ -227,34 +279,55 @@ Route::get('/payment/qris', function (Illuminate\Http\Request $request) {
     $bookingNo = $request->query('booking_no') ?? $request->query('order_id');
     if ($bookingNo) {
         $booking = \App\Models\Booking::where('no_pesanan', $bookingNo)->with(['accommodation', 'corporatePackage'])->first();
+    } elseif (Auth::check()) {
+        $user = Auth::user();
+        $userEmail = trim(strtolower($user->email ?? ''));
+        $booking = \App\Models\Booking::where(function($q) use ($userEmail, $user) {
+                if (!empty($userEmail)) $q->whereRaw('LOWER(TRIM(pemesan_email)) = ?', [$userEmail]);
+                if (!empty($user->name)) $q->orWhere('pemesan_nama', $user->name);
+            })
+            ->orderBy('id', 'desc')
+            ->with(['accommodation', 'corporatePackage'])
+            ->first();
     }
     return view('payment.qris', compact('booking'));
 })->name('payment.qris');
+
+Route::get('/payment/e-wallet', function (Illuminate\Http\Request $request) {
+    $booking = null;
+    $bookingNo = $request->query('booking_no') ?? $request->query('order_id');
+    if ($bookingNo) {
+        $booking = \App\Models\Booking::where('no_pesanan', $bookingNo)->with(['accommodation', 'corporatePackage'])->first();
+    } elseif (Auth::check()) {
+        $user = Auth::user();
+        $userEmail = trim(strtolower($user->email ?? ''));
+        $booking = \App\Models\Booking::where(function($q) use ($userEmail, $user) {
+                if (!empty($userEmail)) $q->whereRaw('LOWER(TRIM(pemesan_email)) = ?', [$userEmail]);
+                if (!empty($user->name)) $q->orWhere('pemesan_nama', $user->name);
+            })
+            ->orderBy('id', 'desc')
+            ->with(['accommodation', 'corporatePackage'])
+            ->first();
+    }
+    return view('payment.e-wallet', compact('booking'));
+})->name('payment.e-wallet');
 
 Route::get('/reservasi/konfirmasi', function (Illuminate\Http\Request $request) {
     $booking = null;
     $bookingNo = $request->query('booking_no') ?? $request->query('order_id');
     if ($bookingNo) {
         $booking = \App\Models\Booking::where('no_pesanan', $bookingNo)->with(['accommodation', 'corporatePackage'])->first();
+    } elseif (Auth::check()) {
+        $user = Auth::user();
+        $userEmail = trim(strtolower($user->email ?? ''));
+        $booking = \App\Models\Booking::where(function($q) use ($userEmail, $user) {
+                if (!empty($userEmail)) $q->whereRaw('LOWER(TRIM(pemesan_email)) = ?', [$userEmail]);
+                if (!empty($user->name)) $q->orWhere('pemesan_nama', $user->name);
+            })
+            ->orderBy('id', 'desc')
+            ->with(['accommodation', 'corporatePackage'])
+            ->first();
     }
-
-    // Jika status masih pending dan metodenya adalah salah satu dari 4 metode khusus, arahkan langsung ke halaman instruksinya
-    if ($booking && ($booking->status === 'pending' || $request->query('status') === 'pending')) {
-        $mLower = strtolower(trim($booking->metode_pembayaran ?? $request->query('payment_method') ?? ''));
-        if (str_contains($mLower, 'atm')) {
-            return redirect()->to('/payment/atm?booking_no=' . $booking->no_pesanan);
-        }
-        if (str_contains($mLower, 'qris')) {
-            return redirect()->to('/payment/qris?booking_no=' . $booking->no_pesanan);
-        }
-        if (str_contains($mLower, 'virtual account') || str_contains($mLower, 'va') || str_contains($mLower, 'bca') || str_contains($mLower, 'bri') || str_contains($mLower, 'bni') || str_contains($mLower, 'mandiri') || str_contains($mLower, 'bsi')) {
-            return redirect()->to('/payment/virtual-account?booking_no=' . $booking->no_pesanan . '&va=' . urlencode($booking->metode_pembayaran ?? 'BRI'));
-        }
-        if (str_contains($mLower, 'alfamart') || str_contains($mLower, 'indomaret') || str_contains($mLower, 'minimarket')) {
-            return redirect()->to('/payment/minimarket?booking_no=' . $booking->no_pesanan . '&market=' . urlencode($booking->metode_pembayaran ?? 'Alfamart'));
-        }
-    }
-
     return view('reservasi.konfirmasi', compact('booking'));
 })->name('reservasi.konfirmasi');
 

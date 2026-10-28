@@ -227,59 +227,7 @@ class ReservasiController extends Controller
 
             // Tindakan otomatis HANYA jika status berubah dari pending ke success
             if ($isTransitioning) {
-                // 1. Generate PDF (Memory only)
-                try {
-                    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.invoice', ['booking' => $booking])->setPaper('a4', 'portrait');
-                    $pdfContent = $pdf->output();
-                    \Log::info('PDF generated for ' . $booking->no_pesanan);
-                } catch (\Exception $e) {
-                    \Log::error('Gagal membuat PDF untuk pesanan ' . $booking->no_pesanan . ': ' . $e->getMessage());
-                    $pdfContent = null;
-                }
-
-                // 2. Kirim E-Ticket via Email
-                try {
-                    \Illuminate\Support\Facades\Mail::to($booking->pemesan_email)->send(new \App\Mail\BookingSuccessMail($booking, $pdfContent));
-                    \Log::info('Email E-Ticket SENT for ' . $booking->no_pesanan . ' to ' . $booking->pemesan_email);
-                } catch (\Exception $mailEx) {
-                    \Log::error('Gagal mengirim email E-Ticket untuk pesanan ' . $booking->no_pesanan . ': ' . $mailEx->getMessage());
-                }
-
-                // 3. Kirim Konfirmasi WhatsApp via API Meta
-                try {
-                    $checkIn = \Carbon\Carbon::parse($booking->check_in_date)->locale('id')->isoFormat('dddd, D MMMM Y');
-                    $checkOut = \Carbon\Carbon::parse($booking->check_out_date)->locale('id')->isoFormat('dddd, D MMMM Y');
-                    $totalStr = number_format($booking->total, 0, ',', '.');
-                    $invoiceUrl = url('/invoice/' . $booking->no_pesanan . '/download');
-                    $akomodasiJudul = $booking->accommodation ? $booking->accommodation->judul : ($booking->corporatePackage ? $booking->corporatePackage->judul : 'Akomodasi');
-                    $adminNumber = env('WA_ADMIN_NUMBER', '085779012797');
-
-                    $message = "Halo, {$booking->pemesan_nama}!\n\n"
-                             . "Terima kasih telah melakukan pemesanan di *Landeuh Village Riverside*.\n\n"
-                             . "Pembayaran Anda untuk pesanan *{$booking->no_pesanan}* telah BERHASIL diverifikasi.\n\n"
-                             . "Detail Pesanan:\n"
-                             . "🏠 Akomodasi: {$akomodasiJudul}\n"
-                             . "📅 Check-in: {$checkIn}\n"
-                             . "🌙 Durasi: {$booking->malam} Malam\n"
-                             . "📅 Check-out: {$checkOut}\n"
-                             . "💰 Total: IDR {$totalStr}\n"
-                             . "💳 Metode: {$booking->metode_pembayaran}\n\n"
-                             . "Kebijakan\n"
-                             . "- Pemesanan ini tidak dapat diubah\n"
-                             . "- Pemesanan tidak ada refund jika Anda membatalkannya\n\n"
-                             . "Silakan unduh E-Ticket/Invoice Anda melalui link berikut:\n"
-                             . "👉 {$invoiceUrl}\n\n"
-                             . "Tunjukkan Invoice tersebut atau menyebutkan nomor pemesanan saat proses Check-in nanti.\n\n"
-                             . "*(Pesan ini dibuat otomatis oleh sistem)*\n"
-                             . "Jika Anda memiliki pertanyaan lebih lanjut, silakan hubungi kontak Admin Customer Service kami di:\n"
-                             . "wa.me/" . (str_starts_with($adminNumber, '0') ? '62' . substr($adminNumber, 1) : $adminNumber) . "\n\n"
-                             . "Salam hangat,\n"
-                             . "Tim Landeuh Village Riverside";
-
-                    \App\Services\WhatsAppService::sendMessage($booking->pemesan_telp, $message);
-                } catch (\Exception $waEx) {
-                    \Log::error('Gagal mengirim WhatsApp untuk pesanan ' . $booking->no_pesanan . ': ' . $waEx->getMessage());
-                }
+                $this->sendSuccessNotifications($booking);
             }
 
             return response()->json([
@@ -292,6 +240,93 @@ class ReservasiController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal memperbarui status: ' . $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * Memeriksa status pembayaran dari user saat tombol 'Cek Status Pembayaran' diklik.
+     * Jika pesanan belum dibayar (belum berstatus 'success'), pesanan ditolak / diset ke 'failed'.
+     */
+    public function checkPaymentStatus(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'no_pesanan' => 'required|string|exists:bookings,no_pesanan',
+                'metode_pembayaran' => 'nullable|string',
+            ]);
+
+            $booking = Booking::where('no_pesanan', $validated['no_pesanan'])->firstOrFail();
+
+            if (!empty($validated['metode_pembayaran'])) {
+                $booking->metode_pembayaran = $validated['metode_pembayaran'];
+            }
+
+            // Jika pesanan sudah disetujui / success (misal diverifikasi admin)
+            if ($booking->status === 'success') {
+                return response()->json([
+                    'success' => true,
+                    'status' => 'success',
+                    'message' => 'Pembayaran telah berhasil diverifikasi.',
+                    'booking' => $booking
+                ]);
+            }
+
+            // Cek status ke Midtrans API secara real-time jika dikonfigurasi
+            $serverKey = config('services.midtrans.server_key');
+            if (!empty($serverKey) && $serverKey !== 'SB-Mid-server-YOUR_SERVER_KEY') {
+                \Midtrans\Config::$serverKey = $serverKey;
+                $isProduction = config('services.midtrans.is_production', false);
+                if (str_starts_with($serverKey, 'Mid-server-')) {
+                    $isProduction = true;
+                }
+                \Midtrans\Config::$isProduction = $isProduction;
+                \Midtrans\Config::$curlOptions = [
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYHOST => 0,
+                ];
+
+                try {
+                    $midStatus = \Midtrans\Transaction::status($booking->no_pesanan);
+                    $trxStatus = is_object($midStatus) ? ($midStatus->transaction_status ?? null) : null;
+                    if ($trxStatus === 'settlement' || $trxStatus === 'capture') {
+                        $booking->status = 'success';
+                        $booking->save();
+                        $this->sendSuccessNotifications($booking);
+                        return response()->json([
+                            'success' => true,
+                            'status' => 'success',
+                            'message' => 'Pembayaran telah berhasil diverifikasi via Midtrans.',
+                            'booking' => $booking
+                        ]);
+                    } elseif ($trxStatus === 'expire' || $trxStatus === 'cancel' || $trxStatus === 'deny') {
+                        $booking->status = 'failed';
+                        $booking->save();
+                        return response()->json([
+                            'success' => false,
+                            'status' => 'failed',
+                            'message' => 'Pembayaran telah dibatalkan atau kedaluwarsa.',
+                            'booking' => $booking
+                        ]);
+                    }
+                } catch (\Exception $midEx) {
+                    // Transaksi belum masuk ke Midtrans atau orderId belum dibayar
+                }
+            }
+
+            // Jika belum dibayar, status TETAP 'pending' (tidak diubah ke failed)
+            // agar pesanan tetap muncul di tab 'Belum Dibayar' di Pesanan Saya.
+            return response()->json([
+                'success' => false,
+                'status' => 'pending',
+                'message' => 'Pembayaran belum terdeteksi. Pesanan Anda tetap tersimpan di menu Pesanan Saya (Belum Dibayar).',
+                'booking' => $booking
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'status' => 'pending',
+                'message' => 'Gagal memeriksa status: ' . $e->getMessage()
             ], 400);
         }
     }
@@ -354,6 +389,13 @@ class ReservasiController extends Controller
                     'success' => false,
                     'message' => 'Klik OK untuk membuka kode pembayaran kasir.',
                     'custom_redirect' => url('/payment/minimarket?booking_no=' . $booking->no_pesanan . '&market=' . urlencode($validated['metode_pembayaran']))
+                ]);
+            }
+            if (str_contains($methodLower, 'dana') || str_contains($methodLower, 'gopay') || str_contains($methodLower, 'ovo') || str_contains($methodLower, 'shopeepay') || str_contains($methodLower, 'wallet') || str_contains($methodLower, 'e-wallet')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Klik OK untuk membuka petunjuk pembayaran E-Wallet.',
+                    'custom_redirect' => url('/payment/e-wallet?booking_no=' . $booking->no_pesanan . '&wallet=' . urlencode($validated['metode_pembayaran']))
                 ]);
             }
 
@@ -817,5 +859,65 @@ class ReservasiController extends Controller
         }
 
         return 'weekday';
+    }
+
+    /**
+     * Mengirimkan notifikasi PDF, Email, dan WhatsApp saat pembayaran sukses.
+     */
+    private function sendSuccessNotifications($booking)
+    {
+        // 1. Generate PDF (Memory only)
+        try {
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.invoice', ['booking' => $booking])->setPaper('a4', 'portrait');
+            $pdfContent = $pdf->output();
+            \Log::info('PDF generated for ' . $booking->no_pesanan);
+        } catch (\Exception $e) {
+            \Log::error('Gagal membuat PDF untuk pesanan ' . $booking->no_pesanan . ': ' . $e->getMessage());
+            $pdfContent = null;
+        }
+
+        // 2. Kirim E-Ticket via Email
+        try {
+            \Illuminate\Support\Facades\Mail::to($booking->pemesan_email)->send(new \App\Mail\BookingSuccessMail($booking, $pdfContent));
+            \Log::info('Email E-Ticket SENT for ' . $booking->no_pesanan . ' to ' . $booking->pemesan_email);
+        } catch (\Exception $mailEx) {
+            \Log::error('Gagal mengirim email E-Ticket untuk pesanan ' . $booking->no_pesanan . ': ' . $mailEx->getMessage());
+        }
+
+        // 3. Kirim Konfirmasi WhatsApp via API Meta
+        try {
+            $checkIn = \Carbon\Carbon::parse($booking->check_in_date)->locale('id')->isoFormat('dddd, D MMMM Y');
+            $checkOut = \Carbon\Carbon::parse($booking->check_out_date)->locale('id')->isoFormat('dddd, D MMMM Y');
+            $totalStr = number_format($booking->total, 0, ',', '.');
+            $invoiceUrl = url('/invoice/' . $booking->no_pesanan . '/download');
+            $akomodasiJudul = $booking->accommodation ? $booking->accommodation->judul : ($booking->corporatePackage ? $booking->corporatePackage->judul : 'Akomodasi');
+            $adminNumber = env('WA_ADMIN_NUMBER', '085779012797');
+
+            $message = "Halo, {$booking->pemesan_nama}!\n\n"
+                     . "Terima kasih telah melakukan pemesanan di *Landeuh Village Riverside*.\n\n"
+                     . "Pembayaran Anda untuk pesanan *{$booking->no_pesanan}* telah BERHASIL diverifikasi.\n\n"
+                     . "Detail Pesanan:\n"
+                     . "🏠 Akomodasi: {$akomodasiJudul}\n"
+                     . "📅 Check-in: {$checkIn}\n"
+                     . "🌙 Durasi: {$booking->malam} Malam\n"
+                     . "📅 Check-out: {$checkOut}\n"
+                     . "💰 Total: IDR {$totalStr}\n"
+                     . "💳 Metode: {$booking->metode_pembayaran}\n\n"
+                     . "Kebijakan\n"
+                     . "- Pemesanan ini tidak dapat diubah\n"
+                     . "- Pemesanan tidak ada refund jika Anda membatalkannya\n\n"
+                     . "Silakan unduh E-Ticket/Invoice Anda melalui link berikut:\n"
+                     . "👉 {$invoiceUrl}\n\n"
+                     . "Tunjukkan Invoice tersebut atau menyebutkan nomor pemesanan saat proses Check-in nanti.\n\n"
+                     . "*(Pesan ini dibuat otomatis oleh sistem)*\n"
+                     . "Jika Anda memiliki pertanyaan lebih lanjut, silakan hubungi kontak Admin Customer Service kami di:\n"
+                     . "wa.me/" . (str_starts_with($adminNumber, '0') ? '62' . substr($adminNumber, 1) : $adminNumber) . "\n\n"
+                     . "Salam hangat,\n"
+                     . "Tim Landeuh Village Riverside";
+
+            \App\Services\WhatsAppService::sendMessage($booking->pemesan_telp, $message);
+        } catch (\Exception $waEx) {
+            \Log::error('Gagal mengirim WhatsApp untuk pesanan ' . $booking->no_pesanan . ': ' . $waEx->getMessage());
+        }
     }
 }

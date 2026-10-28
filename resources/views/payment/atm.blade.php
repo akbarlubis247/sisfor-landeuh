@@ -25,6 +25,8 @@
 .va-input-wrapper{position:relative;display:flex;align-items:center}
 .va-input{width:100%;padding:0.8rem 1rem;border:1px solid #dfd4be;border-radius:0.5rem;font-size:0.95rem;outline:none;background:#fff;font-weight:600;color:#333}
 .va-copy-btn{position:absolute;right:0.5rem;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#3a523a;cursor:pointer;padding:0.5rem;display:flex;align-items:center;justify-content:center}
+.va-btn-bayar{width:100%;background:#284b25;color:#fff;border:none;padding:0.75rem;border-radius:0.4rem;font-size:0.95rem;font-weight:700;cursor:pointer;transition:0.2s;text-align:center}
+.va-btn-bayar:hover{background:#1e391c}
 .va-btn-outline{width:100%;background:transparent;color:#334d2f;border:1.5px solid #334d2f;padding:0.75rem;border-radius:0.4rem;font-size:0.95rem;font-weight:700;cursor:pointer;transition:0.2s;text-align:center}
 .va-btn-outline:hover{background:#334d2f;color:#fff}
 .sidebar-card-cream{background:#f1e5cc;border-radius:1rem;border:1px solid #dfd4be;padding:1.5rem;margin-bottom:1rem;box-shadow:0 10px 25px rgba(0,0,0,0.05);overflow:hidden}
@@ -80,24 +82,25 @@
                 </div>
                 
                 <div class="pay-alert-bar">
-                    Cek emailmu (<strong id="userEmailSpan">{{ $booking->pemesan_email ?? 'xxxxxx@gmail.com' }}</strong>) sekarang untuk detail cara bayar.
+                    Cek emailmu (<strong id="userEmailSpan">{{ $booking->pemesan_email ?? 'tamu@landeuh.com' }}</strong>) sekarang untuk detail cara bayar.
                 </div>
                 
                 <h3 style="font-size:1.15rem; font-weight:800; color:#333; margin-bottom:0.8rem;">Mohon transfer ke</h3>
                 
                 <div class="va-card">
                     <div class="va-title">
-                        <span>BNI</span>
-                        <div style="height:36px; display:flex; align-items:center; justify-content:flex-end;">
-                            <img src="{{ asset('images/partner-pembayaran/bni.png') }}" alt="BNI" style="height:28px; object-fit:contain;">
+                        <span>ATM Bersama / BNI</span>
+                        <div style="height:36px; display:flex; align-items:center; gap:0.5rem; justify-content:flex-end;">
+                            <img src="{{ asset('images/partner-pembayaran/atm_bersama.png') }}" alt="ATM Bersama" style="height:26px; object-fit:contain;" onerror="this.style.display='none'">
+                            <img src="{{ asset('images/partner-pembayaran/bni.png') }}" alt="BNI" style="height:26px; object-fit:contain;">
                         </div>
                     </div>
                     
                     <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:1rem;">
                         <div class="va-input-group">
-                            <label>No. Rekening</label>
+                            <label>No. Rekening / Virtual Account (Kode Bank BNI: 009)</label>
                             <div class="va-input-wrapper">
-                                <input type="text" class="va-input" id="atmCode" value="xxxxxxxxxxxxxxxxxx" readonly>
+                                <input type="text" class="va-input" id="atmCode" value="8808100706440732" readonly>
                                 <button type="button" class="va-copy-btn" onclick="copyText('atmCode')" title="Salin">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg>
                                 </button>
@@ -105,16 +108,16 @@
                         </div>
                         <div class="va-input-group">
                             <label>Nama Penerima</label>
-                            <input type="text" class="va-input" id="dynNamaPenerima" value="ABC DEFGHIJKLMN" readonly>
+                            <input type="text" class="va-input" id="dynNamaPenerima" value="OVY RESIYANA" readonly>
                         </div>
                     </div>
                 </div>
 
                 <div class="va-card" style="padding:1.2rem 1.5rem; margin-bottom:1.5rem;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:1.5rem;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:1.5rem; margin-bottom:0;">
                         <label style="font-size:0.95rem; font-weight:700; color:#333; margin:0; white-space:nowrap;">Jumlah Transfer</label>
                         <div style="flex:1; max-width:380px;">
-                            <input type="text" class="va-input" id="dynTransferAmount" value="{{ isset($booking) ? number_format($booking->total, 0, ',', '.') : '921.609' }}" readonly style="font-size:1.05rem; font-weight:700; color:#333; padding:0.65rem 1rem;">
+                            <input type="text" class="va-input" id="dynTransferAmount" value="{{ isset($booking) ? number_format($booking->total, 0, ',', '.') : '1.600.000' }}" readonly style="font-size:1.05rem; font-weight:700; color:#333; padding:0.65rem 1rem;">
                         </div>
                     </div>
                 </div>
@@ -122,7 +125,7 @@
                 <h3 style="font-size:1.15rem; font-weight:800; color:#333; margin-bottom:0.8rem; margin-top:1.5rem;">Sudah selesai bayar?</h3>
                 <div class="va-card-confirm">
                     <p style="font-size:0.9rem; color:#555; margin-bottom:1.5rem;">Setelah pembayaran berhasil terverifikasi, e-ticket dan bukti pembayaran akan kami kirimkan ke email Anda.</p>
-                    <button class="va-btn-outline" onclick="goToKonfirmasi('success')">Cek Status Pembayaran</button>
+                    <button class="va-btn-outline" style="width:100%; background:#3a523a; color:#fff; cursor:pointer; font-weight:700;" onclick="cekStatusPembayaran(this)">Cek Status Pembayaran</button>
                 </div>
             </div>
 
@@ -247,7 +250,15 @@ function copyText(id) {
     
     if(dJudul) document.getElementById('headerAkoJudul').textContent = dJudul;
     
-    if(dNama) document.getElementById('dynNama').textContent = dNama;
+    if(dNama) {
+        document.getElementById('dynNama').textContent = dNama;
+        const pEl = document.getElementById('dynNamaPenerima');
+        if (pEl) pEl.value = 'OVY RESIYANA';
+    }
+    const atmEl = document.getElementById('atmCode');
+    if (atmEl) {
+        atmEl.value = '8808100706440732';
+    }
     if(dHp) document.getElementById('dynHp').textContent = dHp;
     if(dEmail) {
         document.getElementById('dynEmail').textContent = dEmail;
@@ -287,13 +298,26 @@ function copyText(id) {
     }
 })();
 
-function goToKonfirmasi(status) {
-    sessionStorage.setItem('res_payment_status', status);
+function cekStatusPembayaran(btn) {
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+        btn.innerText = 'Memeriksa Status Pembayaran...';
+    }
+
+    const resetBtn = () => {
+        if (btn) {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.innerText = 'Cek Status Pembayaran';
+        }
+    };
+
     const bookingNo = sessionStorage.getItem('res_booking_no') || '{{ $booking->no_pesanan ?? "" }}';
     const method = sessionStorage.getItem('res_payment_method') || 'ATM';
 
     if (bookingNo) {
-        fetch('/reservasi/update-status', {
+        fetch('/reservasi/check-payment-status', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -301,14 +325,21 @@ function goToKonfirmasi(status) {
             },
             body: JSON.stringify({
                 no_pesanan: bookingNo,
-                status: 'success',
                 metode_pembayaran: method
             })
-        }).finally(() => {
-            window.location.href = `/reservasi/konfirmasi?booking_no=${encodeURIComponent(bookingNo)}&status=success`;
+        })
+        .then(res => res.json())
+        .then(data => {
+            const st = (data.status === 'success') ? 'success' : (data.status === 'failed' ? 'failed' : 'pending');
+            sessionStorage.setItem('res_payment_status', st);
+            window.location.href = `/reservasi/konfirmasi?booking_no=${encodeURIComponent(bookingNo)}&status=${st}`;
+        })
+        .catch(err => {
+            sessionStorage.setItem('res_payment_status', 'pending');
+            window.location.href = `/reservasi/konfirmasi?booking_no=${encodeURIComponent(bookingNo)}&status=pending`;
         });
     } else {
-        window.location.href = '/reservasi/konfirmasi?status=success';
+        window.location.href = '/reservasi/konfirmasi?status=pending';
     }
 }
 </script>

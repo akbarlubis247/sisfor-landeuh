@@ -1,5 +1,518 @@
-﻿@extends('layouts.booking')
+@extends('layouts.booking')
+@section('title', 'Pembayaran E-Wallet - Landeuh Village Riverside')
 @section('content')
-    <!-- Payment: e-wallet -->
-    @include('components.payment-timer')
+<style>
+.va-page{background:#F8EDD8;min-height:100vh;position:relative}
+.pay-header{background:rgba(255,255,255,0.7);backdrop-filter:blur(10px);border-bottom:1px solid rgba(0,0,0,0.08);padding:0.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.pay-logo{display:flex;align-items:center;gap:1rem}
+.pay-logo img{height:40px}
+.pay-logo .divider{width:1px;height:30px;background:#ccc}
+.pay-logo h2{font-size:0.95rem;font-weight:700;color:#333}
+.pay-steps{display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;font-weight:600}
+.pay-steps .num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff}
+.pay-steps .num.done{background:#3a523a}
+.pay-steps .num.active{background:#3a523a}
+.pay-steps .line{width:40px;height:2px;background:#3a523a}
+.pay-back{display:flex;align-items:center;gap:0.5rem;font-weight:700;font-size:0.95rem;cursor:pointer;color:#333;margin:1.5rem 0 1rem}
+.pay-timer-bar{background:#4a7736;color:#fff;padding:0.75rem 1.25rem;border-radius:0.5rem;font-size:0.92rem;font-weight:600;margin-bottom:0.85rem;display:flex;align-items:center;justify-content:space-between}
+.pay-timer-bar .timer{background:transparent;color:#c6f16d;padding:0;border-radius:0;font-weight:800;font-size:1.15rem;font-family:inherit;letter-spacing:0.04em}
+.pay-alert-bar{background:#ea9e37;color:#fff;padding:0.75rem 1.2rem;border-radius:0.5rem;font-size:0.88rem;margin-bottom:1.25rem;font-weight:500}
+.va-card{background:#f1e5cc;border-radius:0.75rem;border:1px solid #dfd4be;margin-bottom:1rem;padding:1.5rem}
+.va-card-confirm{background:#f1e5cc;border-radius:0.75rem;border:1px solid #dfd4be;margin-bottom:1rem;padding:1.5rem}
+.va-title{font-size:1.15rem;font-weight:800;color:#333;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #dfd4be;padding-bottom:1rem}
+.va-input-group{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:0.5rem}
+.va-input-group label{font-size:0.85rem;font-weight:700;color:#444}
+.va-input-wrapper{position:relative;display:flex;align-items:center}
+.va-input{width:100%;padding:0.8rem 1rem;border:1px solid #dfd4be;border-radius:0.5rem;font-size:0.95rem;outline:none;background:#fff;font-weight:600;color:#333}
+.va-copy-btn{position:absolute;right:0.5rem;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#3a523a;cursor:pointer;padding:0.5rem;display:flex;align-items:center;justify-content:center;transition:color 0.2s}
+.va-copy-btn:hover{color:#1e391c}
+.va-btn-bayar{width:100%;background:#284b25;color:#fff;border:none;padding:0.75rem;border-radius:0.4rem;font-size:0.95rem;font-weight:700;cursor:pointer;transition:0.2s;text-align:center}
+.va-btn-bayar:hover{background:#1e391c}
+.va-btn-outline{width:100%;background:transparent;color:#334d2f;border:1.5px solid #334d2f;padding:0.75rem;border-radius:0.4rem;font-size:0.95rem;font-weight:700;cursor:pointer;transition:0.2s;text-align:center}
+.va-btn-outline:hover{background:#334d2f;color:#fff}
+.inst-item{border-bottom:1px solid #dfd4be}
+.inst-item:last-child{border-bottom:none}
+.inst-header{display:flex;justify-content:space-between;align-items:center;padding:1.2rem 0;cursor:pointer;font-weight:700;font-size:0.95rem;color:#333}
+.inst-header .chevron{transition:transform 0.3s}
+.inst-item.open .chevron{transform:rotate(180deg)}
+.inst-content{display:none;padding:0 0 1.2rem 0;font-size:0.85rem;color:#444;line-height:1.6}
+.inst-item.open .inst-content{display:block}
+.inst-content ol{padding-left:1.2rem;margin-bottom:0}
+.inst-content ol li{margin-bottom:0.4rem}
+.sidebar-card-cream{background:#f1e5cc;border-radius:1rem;border:1px solid #dfd4be;padding:1.5rem;margin-bottom:1rem;box-shadow:0 10px 25px rgba(0,0,0,0.05);overflow:hidden}
+.sidebar-card-cream h3{font-size:1.15rem;font-weight:800;display:flex;align-items:center;gap:0.5rem;margin-bottom:1.2rem;color:#222}
+.sb-checkin{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.4);backdrop-filter:blur(5px);margin:0 -1.5rem 1rem -1.5rem;padding:1rem 1.5rem;border-bottom:1px solid #dfd4be;border-top:1px solid #dfd4be}
+.sb-checkin .label{font-size:0.75rem;font-weight:700;margin-bottom:0.2rem}
+.sb-checkin .label.green{color:#27ae60}
+.sb-checkin .label.red{color:#c0392b}
+.sb-checkin .date{font-weight:700;font-size:0.9rem;color:#333}
+.sb-checkin .time{color:#888;font-size:0.65rem;margin-top:0.2rem}
+.sb-bed{display:flex;align-items:center;gap:0.8rem;font-size:0.8rem;color:#444;border-bottom:1px solid #dfd4be;padding-bottom:1rem;margin-bottom:1rem;font-weight:600}
+.sb-bed .divider{width:1px;height:16px;background:#c2b59b}
+.sb-bed div{display:flex;align-items:center;gap:0.4rem}
+.sb-fasilitas{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;font-size:0.75rem;color:#444;margin-bottom:1rem}
+.sb-fasilitas .col-title{font-weight:700;color:#333;margin-bottom:0.4rem}
+.sb-fasilitas ul{list-style-type:disc;margin-left:1rem}
+.sb-fasilitas ul li{margin-bottom:0.2rem}
+.sb-guest{display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;font-weight:600;color:#444;border-bottom:1px solid #dfd4be;padding-bottom:1rem;margin-bottom:1rem}
+.sb-identity{display:flex;justify-content:space-between;font-size:0.8rem;color:#333}
+.sb-identity .title{font-size:0.75rem;color:#666;margin-bottom:0.5rem}
+.sb-identity .row{display:flex;align-items:flex-start;gap:0.5rem;font-weight:500}
+.sb-identity .details{display:flex;flex-direction:column;gap:0.15rem}
+.copy-tooltip{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2c402c;color:#fff;padding:0.6rem 1.2rem;border-radius:2rem;font-size:0.85rem;font-weight:600;box-shadow:0 4px 15px rgba(0,0,0,0.2);display:none;z-index:9999}
+@media(max-width:768px){.pay-grid{flex-direction:column!important}}
+</style>
+
+<div class="va-page">
+    <img src="{{ asset('images/assets_lain/batik.png') }}" class="absolute top-16 -left-6 w-36 opacity-20 pointer-events-none rotate-6 z-0" alt="">
+    <img src="{{ asset('images/assets_lain/batik.png') }}" class="absolute top-1/2 -right-8 w-40 opacity-15 pointer-events-none -rotate-12 scale-x-[-1] z-0" alt="">
+    <img src="{{ asset('images/assets_lain/batik.png') }}" class="absolute bottom-8 left-10 w-32 opacity-10 pointer-events-none rotate-45 z-0" alt="">
+
+    <div class="pay-header">
+        <div class="pay-logo">
+            <img src="{{ asset('images/logo-landeuh.png') }}" alt="Logo">
+            <div class="divider"></div>
+            <h2 id="headerAkoJudul">{{ (isset($booking) && ($booking->corporatePackage ?? $booking->accommodation)) ? ($booking->corporatePackage->judul ?? $booking->accommodation->judul) : 'Kamar Keluarga Deluks dengan Pemandangan Sungai' }}</h2>
+        </div>
+        <div class="pay-steps">
+            <div style="display:flex;align-items:center;gap:0.35rem"><div class="num done">1</div> Review</div>
+            <div class="line"></div>
+            <div style="display:flex;align-items:center;gap:0.35rem"><div class="num active">2</div> Bayar</div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 py-2 relative z-10">
+        <div class="pay-back" onclick="window.history.back()">← Kembali</div>
+        
+        <div class="pay-grid" style="display:flex;gap:1.5rem;align-items:flex-start">
+            {{-- LEFT --}}
+            <div style="flex:1.4;">
+                <div class="pay-timer-bar">
+                    <span>Harga sudah kami amankan. Selesaikan pembayaran dalam</span>
+                    <span class="timer" id="countdownTimer">00.30.00</span>
+                </div>
+                
+                <div class="pay-alert-bar">
+                    Cek emailmu (<strong id="userEmailSpan">{{ $booking->pemesan_email ?? 'tamu@landeuh.com' }}</strong>) sekarang untuk detail cara bayar.
+                </div>
+                
+                <h3 style="font-size:1.15rem; font-weight:800; color:#333; margin-bottom:0.8rem;">Selesaikan pembayaran melalui aplikasi E-Wallet</h3>
+                
+                <div class="va-card">
+                    <div class="va-title">
+                        <span id="dynWalletName">GoPay</span>
+                        <div style="height:36px; display:flex; align-items:center; justify-content:flex-end;">
+                            <img id="dynWalletLogo" src="{{ asset('images/partner-pembayaran/gopay.png') }}" alt="Logo E-Wallet" style="height:32px; object-fit:contain;">
+                        </div>
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:1rem;">
+                        <div class="va-input-group">
+                            <label id="dynAccountLabel">No. Handphone / Akun E-Wallet (Uji Sandbox: 081234567890)</label>
+                            <div class="va-input-wrapper">
+                                <input type="text" class="va-input" id="dynAccountNumber" value="081234567890" readonly>
+                                <button type="button" class="va-copy-btn" onclick="copyText('dynAccountNumber')" title="Salin Nomor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="va-input-group">
+                            <label>Nama Penerima</label>
+                            <input type="text" class="va-input" id="dynNamaPenerima" value="OVY RESIYANA" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="va-card" style="padding:1.2rem 1.5rem; margin-bottom:1.5rem;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:1.5rem; margin-bottom:0;">
+                        <label style="font-size:0.95rem; font-weight:700; color:#333; margin:0; white-space:nowrap;">Jumlah Pembayaran</label>
+                        <div style="flex:1; max-width:380px;">
+                            <input type="text" class="va-input" id="dynTransferAmount" value="{{ isset($booking) ? number_format($booking->total, 0, ',', '.') : '1.600.000' }}" readonly style="font-size:1.05rem; font-weight:700; color:#333; padding:0.65rem 1rem;">
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 style="font-size:1.15rem; font-weight:800; color:#333; margin-bottom:0.8rem;">Bagaimana Cara Bayar E-Wallet</h3>
+                <div class="va-card" id="dynInstructions" style="padding: 0.5rem 1.5rem">
+                    <!-- Dynamic accordion items will be injected here -->
+                </div>
+                
+                <h3 style="font-size:1.15rem; font-weight:800; color:#333; margin-bottom:0.8rem; margin-top:2rem;">Sudah selesai bayar?</h3>
+                <div class="va-card-confirm">
+                    <p style="font-size:0.9rem; color:#555; margin-bottom:1.5rem;">Setelah pembayaran berhasil terverifikasi, e-ticket dan bukti pembayaran akan kami kirimkan ke email Anda.</p>
+                    <button class="va-btn-outline" style="width:100%; background:#3a523a; color:#fff; cursor:pointer; font-weight:700;" onclick="cekStatusPembayaran(this)">Cek Status Pembayaran</button>
+                </div>
+            </div>
+
+            {{-- RIGHT: Rincian Reservasi --}}
+            <div style="flex:0.8;min-width:300px;position:sticky;top:80px">
+                <div class="sidebar-card-cream">
+                    <h3>
+                        <iconify-icon icon="lucide:clipboard-list" class="text-xl"></iconify-icon> Rincian Reservasi
+                    </h3>
+                    
+                    <div class="sb-checkin">
+                        <div><div class="label green">Check-in</div><div class="date" id="dynCheckin">Selasa, 28 April 2026</div><div class="time">Dari 14.00</div></div>
+                        <div style="text-align:center;color:#888"><div id="dynMalam" style="font-size:0.7rem;font-weight:600">1 malam</div><div style="font-size:1.2rem;margin-top:-4px">→</div></div>
+                        <div style="text-align:right"><div class="label red">Check-out</div><div class="date" id="dynCheckout">Rabu, 29 April 2026</div><div class="time">Hingga 12.00</div></div>
+                    </div>
+                    
+                    <div class="sb-bed">
+                        <div id="dynBed"><iconify-icon icon="lucide:bed-double" class="text-lg"></iconify-icon> Memuat...</div>
+                        <div class="divider"></div>
+                        <div id="dynSmoking"><iconify-icon icon="lucide:cigarette" class="text-lg"></iconify-icon> Memuat...</div>
+                    </div>
+                    
+                    <div class="sb-fasilitas">
+                        <div>
+                            <div class="col-title">Fasilitas Kamar:</div>
+                            <ul id="dynFasilitas1"></ul>
+                        </div>
+                        <div style="padding-top:1.4rem">
+                            <ul id="dynFasilitas2"></ul>
+                        </div>
+                        <div>
+                            <div class="col-title">Makanan & Minuman:</div>
+                            <ul id="dynMakanan"></ul>
+                        </div>
+                    </div>
+                    
+                    <div class="sb-guest">
+                        <iconify-icon icon="lucide:user" class="text-lg"></iconify-icon> <span id="dynGuestInfo">Memuat...</span>
+                    </div>
+                    
+                    <div class="sb-identity">
+                        <div>
+                            <div class="title">Identitas Pemesan:</div>
+                            <div class="row">
+                                <iconify-icon icon="lucide:user-check" class="text-base mt-1"></iconify-icon>
+                                <div class="details">
+                                    <div id="dynNama">Memuat...</div>
+                                    <div id="dynHp">Memuat...</div>
+                                    <div id="dynEmail">Memuat...</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="text-align:right">
+                            <div class="title">Nama Tamu:</div>
+                            <div class="row" style="justify-content:flex-end">
+                                <iconify-icon icon="lucide:book-user" class="text-base mt-0.5"></iconify-icon>
+                                <div class="details">
+                                    <div id="dynTamu">Memuat...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="copy-tooltip" id="copyTooltip">Tersalin ke papan klip!</div>
+
+@push('scripts')
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<script src="{{ asset('js/akomodasi-data.js') }}"></script>
+<script>
+function copyText(elementId) {
+    const copyText = document.getElementById(elementId);
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(copyText.value).then(() => {
+        const tooltip = document.getElementById('copyTooltip');
+        tooltip.style.display = 'block';
+        setTimeout(() => {
+            tooltip.style.display = 'none';
+        }, 2000);
+    });
+}
+
+function toggleInst(header) {
+    const item = header.parentElement;
+    item.classList.toggle('open');
+}
+
+const WALLET_DATA = {
+    'dana': {
+        name: 'DANA',
+        logo: 'dana.png',
+        account: '081234567890',
+        accountLabel: 'No. Handphone / Akun DANA (Uji Sandbox: 081234567890)',
+        logoHeight: '32px',
+        instructions: [
+            {
+                title: 'Transfer Melalui Aplikasi DANA',
+                steps: [
+                    'Buka aplikasi DANA di smartphone Anda.',
+                    'Pilih menu "Kirim" atau "Kirim ke Nomor Telepon".',
+                    'Masukkan nomor tujuan DANA Sandbox: <strong>081234567890</strong>.',
+                    'Pastikan nama akun penerima adalah <strong>OVY RESIYANA</strong>.',
+                    'Masukkan nominal pembayaran sesuai dengan total tagihan.',
+                    'Periksa kembali rincian pembayaran Anda, lalu masukkan PIN DANA Anda.',
+                    'Transaksi selesai. Simpan bukti transfer Anda lalu klik "Cek Status Pembayaran" di bawah.'
+                ]
+            },
+            {
+                title: 'Pembayaran Menggunakan Scan QRIS di DANA',
+                steps: [
+                    'Buka aplikasi DANA dan klik ikon "Pindai / Scan QR".',
+                    'Arahkan kamera ke QRIS Landeuh Village Riverside atau masukkan nominal.',
+                    'Periksa total tagihan lalu klik "Bayar".',
+                    'Masukkan PIN DANA Anda untuk menyelesaikan transaksi.'
+                ]
+            }
+        ]
+    },
+    'gopay': {
+        name: 'GoPay',
+        logo: 'gopay.png',
+        account: '081234567890',
+        accountLabel: 'No. Handphone / Akun GoPay',
+        logoHeight: '34px',
+        instructions: [
+            {
+                title: 'Transfer Melalui Aplikasi GoPay / Gojek',
+                steps: [
+                    'Buka aplikasi Gojek atau aplikasi GoPay di smartphone Anda.',
+                    'Pilih menu "Bayar" atau "Transfer".',
+                    'Pilih opsi "Kirim ke Nomor HP" atau cari kontak tujuan.',
+                    'Masukkan nomor tujuan GoPay: <strong>081234567890</strong>.',
+                    'Pastikan nama penerima terdaftar sebagai <strong>OVY RESIYANA</strong>.',
+                    'Masukkan nominal transfer sesuai total tagihan pesanan Anda.',
+                    'Konfirmasi pembayaran dengan memasukkan PIN GoPay Anda.',
+                    'Simpan notifikasi pembayaran sebagai referensi dan klik tombol verifikasi di bawah.'
+                ]
+            }
+        ]
+    },
+    'ovo': {
+        name: 'OVO',
+        logo: 'ovo.png',
+        account: '081234567890',
+        accountLabel: 'No. Handphone / Akun OVO',
+        logoHeight: '24px',
+        instructions: [
+            {
+                title: 'Transfer Melalui Aplikasi OVO',
+                steps: [
+                    'Buka aplikasi OVO di ponsel Anda dan lakukan login.',
+                    'Pilih menu "Transfer" pada beranda aplikasi.',
+                    'Pilih opsi transfer ke "Sesama OVO".',
+                    'Masukkan nomor ponsel tujuan OVO: <strong>081234567890</strong>.',
+                    'Pastikan penerima tercatat sebagai <strong>OVY RESIYANA</strong>.',
+                    'Masukkan nominal transfer tepat sesuai dengan jumlah tagihan.',
+                    'Periksa rincian transfer lalu masukkan Security Code (PIN OVO) Anda.',
+                    'Transaksi berhasil! Simpan bukti transfer dan klik tombol verifikasi di bawah.'
+                ]
+            }
+        ]
+    },
+    'shopeepay': {
+        name: 'ShopeePay',
+        logo: 'shopeepay.png',
+        account: '081234567890',
+        accountLabel: 'No. Handphone / Akun ShopeePay',
+        logoHeight: '34px',
+        instructions: [
+            {
+                title: 'Transfer Melalui ShopeePay',
+                steps: [
+                    'Buka aplikasi Shopee di ponsel Anda, lalu masuk ke menu "ShopeePay".',
+                    'Pilih menu "Transfer" > "Transfer ke Kontak / No. Handphone".',
+                    'Ketikkan nomor handphone tujuan: <strong>081234567890</strong>.',
+                    'Pastikan nama penerima adalah <strong>OVY RESIYANA</strong>.',
+                    'Masukkan nominal pembayaran sesuai dengan total tagihan.',
+                    'Lanjutkan dan masukkan PIN ShopeePay Anda (atau gunakan Touch/Face ID).',
+                    'Pembayaran berhasil diverifikasi. Klik tombol konfirmasi di bawah.'
+                ]
+            }
+        ]
+    }
+};
+
+(function(){
+    @if(isset($booking))
+        @php
+            $isCorporate = !is_null($booking->corporate_package_id);
+            $unit = $isCorporate ? $booking->corporatePackage : $booking->accommodation;
+            $maxOrang = $unit ? $unit->max_orang : 0;
+            $formattedTotal = number_format($booking->total, 0, ',', '.');
+        @endphp
+        sessionStorage.setItem('res_booking_no', '{{ $booking->no_pesanan }}');
+        sessionStorage.setItem('res_nama', '{{ $booking->pemesan_nama }}');
+        sessionStorage.setItem('res_hp', '{{ $booking->pemesan_telp }}');
+        sessionStorage.setItem('res_email', '{{ $booking->pemesan_email }}');
+        sessionStorage.setItem('res_tamu', '{{ $booking->nama_tamu }}');
+        sessionStorage.setItem('res_guest', '{{ $maxOrang }} Dewasa');
+        sessionStorage.setItem('res_total', '{{ $formattedTotal }}');
+        sessionStorage.setItem('res_akoId', '{{ $isCorporate ? $booking->corporate_package_id : ($booking->accommodation_id ?? 0) }}');
+        sessionStorage.setItem('res_payment_method', '{{ $booking->metode_pembayaran }}');
+        sessionStorage.setItem('res_wallet', '{{ $booking->metode_pembayaran }}');
+        sessionStorage.setItem('res_malam', '{{ $booking->malam }}');
+    @endif
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlWallet = urlParams.get('wallet') || urlParams.get('method');
+    if (urlWallet) {
+        sessionStorage.setItem('res_wallet', urlWallet);
+        sessionStorage.setItem('res_payment_method', urlWallet);
+    }
+    const urlBookingNo = urlParams.get('booking_no') || urlParams.get('order_id');
+    if (urlBookingNo) sessionStorage.setItem('res_booking_no', urlBookingNo);
+
+    // Countdown timer 30 minutes
+    let seconds = 30 * 60;
+    const el = document.getElementById('countdownTimer');
+    setInterval(() => {
+        if (seconds <= 0) return;
+        seconds--;
+        const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
+        el.textContent = '00.' + m + '.' + s;
+    }, 1000);
+    
+    // Load dynamic user data from sessionStorage
+    const dNama = sessionStorage.getItem('res_nama') || 'Ari Rahman';
+    const dHp = sessionStorage.getItem('res_hp') || '081512345678';
+    const dEmail = sessionStorage.getItem('res_email') || 'arirahman@gmail.com';
+    const dTamu = sessionStorage.getItem('res_tamu') || 'M. Akbar R.';
+    const dGuest = sessionStorage.getItem('res_guest') || '4 Dewasa';
+    const dTotal = sessionStorage.getItem('res_total') || '750.000';
+    const dMalam = sessionStorage.getItem('res_malam') || '1';
+    const dJudul = sessionStorage.getItem('res_judul') || 'Kamar Keluarga Deluks dengan Pemandangan Sungai';
+    const dCheckin = sessionStorage.getItem('res_checkin') || 'Kamis, 29 Oktober 2026';
+    const dCheckout = sessionStorage.getItem('res_checkout') || 'Jumat, 30 Oktober 2026';
+    
+    if (dJudul) document.getElementById('headerAkoJudul').textContent = dJudul;
+    if (dNama) document.getElementById('dynNama').textContent = dNama;
+    if (dHp) document.getElementById('dynHp').textContent = dHp;
+    if (dEmail) {
+        document.getElementById('dynEmail').textContent = dEmail;
+        document.getElementById('userEmailSpan').textContent = dEmail;
+    }
+    if (dTamu) document.getElementById('dynTamu').textContent = dTamu;
+    if (dGuest) document.getElementById('dynGuestInfo').textContent = dGuest;
+    if (dTotal) {
+        const amt = dTotal.replace(/IDR\s?/i, '').trim();
+        document.getElementById('dynTransferAmount').value = amt;
+    }
+    if (dMalam) {
+        const dynMalamEl = document.getElementById('dynMalam');
+        if (dynMalamEl) dynMalamEl.textContent = `${dMalam} malam`;
+    }
+    if (dCheckin) {
+        const ciEl = document.getElementById('dynCheckin');
+        if (ciEl) ciEl.textContent = dCheckin;
+    }
+    if (dCheckout) {
+        const coEl = document.getElementById('dynCheckout');
+        if (coEl) coEl.textContent = dCheckout;
+    }
+
+    // Parse accommodation ID from URL or sessionStorage
+    const akoId = parseInt(sessionStorage.getItem('res_akoId')) || 1;
+    const akoItem = (typeof AKOMODASI_DATA !== 'undefined')
+        ? (AKOMODASI_DATA.find(d => d.id === akoId) || AKOMODASI_DATA[0])
+        : null;
+    
+    if (akoItem) {
+        document.getElementById('dynBed').innerHTML = `<iconify-icon icon="lucide:bed-double" class="text-lg"></iconify-icon> ${akoItem.kasur || 'Queen Bed (160x200)'}`;
+        document.getElementById('dynSmoking').innerHTML = `<iconify-icon icon="${akoItem.merokok ? 'lucide:cigarette' : 'lucide:cigarette-off'}" class="text-lg"></iconify-icon> ${akoItem.merokok ? 'Boleh merokok di kamar' : 'Boleh merokok di kamar'}`;
+        
+        const fasLen = Math.ceil(akoItem.fasilitas.length / 2);
+        document.getElementById('dynFasilitas1').innerHTML = akoItem.fasilitas.slice(0, fasLen).map(f => `<li>${f}</li>`).join('');
+        document.getElementById('dynFasilitas2').innerHTML = akoItem.fasilitas.slice(fasLen).map(f => `<li>${f}</li>`).join('');
+        document.getElementById('dynMakanan').innerHTML = akoItem.makanan.map(m => `<li>${m}</li>`).join('');
+    }
+
+    // Determine Wallet info
+    const rawWallet = (sessionStorage.getItem('res_wallet') || sessionStorage.getItem('res_payment_method') || 'DANA').toLowerCase();
+    let walletKey = 'dana';
+    if (rawWallet.includes('gopay')) walletKey = 'gopay';
+    else if (rawWallet.includes('ovo')) walletKey = 'ovo';
+    else if (rawWallet.includes('shopee')) walletKey = 'shopeepay';
+    else walletKey = 'dana';
+
+    const walletInfo = WALLET_DATA[walletKey];
+
+    document.getElementById('dynWalletName').textContent = walletInfo.name;
+    document.getElementById('dynAccountLabel').textContent = walletInfo.accountLabel;
+    document.getElementById('dynAccountNumber').value = walletInfo.account;
+    const pEl = document.getElementById('dynNamaPenerima');
+    if (pEl) pEl.value = 'OVY RESIYANA';
+    
+    const logoEl = document.getElementById('dynWalletLogo');
+    logoEl.src = "{{ asset('images/partner-pembayaran') }}/" + walletInfo.logo;
+    logoEl.alt = walletInfo.name;
+    logoEl.style.height = walletInfo.logoHeight || '32px';
+
+    // Render Instructions
+    const instContainer = document.getElementById('dynInstructions');
+    let instHtml = '';
+    walletInfo.instructions.forEach((inst, idx) => {
+        const isOpen = idx === 0 ? 'open' : '';
+        instHtml += `
+            <div class="inst-item ${isOpen}">
+                <div class="inst-header" onclick="toggleInst(this)">
+                    ${inst.title}
+                    <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                </div>
+                <div class="inst-content">
+                    <ol>
+                        ${inst.steps.map(step => `<li>${step}</li>`).join('')}
+                    </ol>
+                </div>
+            </div>
+        `;
+    });
+    instContainer.innerHTML = instHtml;
+})();
+
+function cekStatusPembayaran(btn) {
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+        btn.innerText = 'Memeriksa Status Pembayaran...';
+    }
+
+    const resetBtn = () => {
+        if (btn) {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.innerText = 'Cek Status Pembayaran';
+        }
+    };
+
+    const bookingNo = sessionStorage.getItem('res_booking_no') || '{{ $booking->no_pesanan ?? "" }}';
+    const method = sessionStorage.getItem('res_wallet') || sessionStorage.getItem('res_payment_method') || 'DANA';
+
+    if (bookingNo) {
+        fetch('/reservasi/check-payment-status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                no_pesanan: bookingNo,
+                metode_pembayaran: method
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            const st = (data.status === 'success') ? 'success' : (data.status === 'failed' ? 'failed' : 'pending');
+            sessionStorage.setItem('res_payment_status', st);
+            window.location.href = `/reservasi/konfirmasi?booking_no=${encodeURIComponent(bookingNo)}&status=${st}`;
+        })
+        .catch(err => {
+            sessionStorage.setItem('res_payment_status', 'pending');
+            window.location.href = `/reservasi/konfirmasi?booking_no=${encodeURIComponent(bookingNo)}&status=pending`;
+        });
+    } else {
+        window.location.href = '/reservasi/konfirmasi?status=pending';
+    }
+}
+</script>
+@endpush
 @endsection

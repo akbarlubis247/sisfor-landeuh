@@ -223,6 +223,7 @@ function renderOrders(container, bookings) {
         <div class="flex flex-wrap gap-2 md:gap-4 border-b border-gray-300 pb-2 mb-8" id="pesananTabs">
             <button class="tab-btn active px-4 py-2 font-bold text-sm md:text-base border-b-2 border-[#3a523a] text-[#3a523a] transition" data-target="belumbayar">Belum Dibayar (${pendingBookings.length})</button>
             <button class="tab-btn px-4 py-2 font-bold text-sm md:text-base border-b-2 border-transparent text-gray-500 hover:text-gray-800 transition" data-target="lunas">Selesai/Lunas (${successBookings.length})</button>
+            <button class="tab-btn px-4 py-2 font-bold text-sm md:text-base border-b-2 border-transparent text-gray-500 hover:text-gray-800 transition" data-target="batal">Dibatalkan (${cancelledBookings.length})</button>
         </div>
     `;
 
@@ -244,6 +245,9 @@ function renderOrders(container, bookings) {
             const dateStr = `${formatDateFriendly(b.check_in_date)} - ${formatDateFriendly(b.check_out_date)}`;
             const paxText = isCorp && b.jumlah_pax ? ` (${b.jumlah_pax} pax)` : '';
             const itemTitle = (unit.judul || 'Akomodasi') + paxText;
+            const targetId = isCorp ? b.corporate_package_id : b.accommodation_id;
+            const corpQuery = isCorp ? '&is_corporate=1' : '';
+            const payUrl = `/reservasi/metode-pembayaran/${targetId}?booking_no=${b.no_pesanan}${corpQuery}`;
             
             html += `
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -268,7 +272,7 @@ function renderOrders(container, bookings) {
                             <div class="text-lg font-extrabold text-[#e53e3e]">${formatPrice(b.total)}</div>
                         </div>
                         <div class="flex items-center">
-                            <a href="/reservasi/metode-pembayaran/${b.accommodation_id}?booking_no=${b.no_pesanan}" class="w-full md:w-auto text-center bg-[#3a523a] hover:bg-[#2c402c] text-white font-bold py-2.5 px-6 rounded-lg transition shadow">Lanjutkan Pembayaran</a>
+                            <a href="${payUrl}" class="w-full md:w-auto text-center bg-[#3a523a] hover:bg-[#2c402c] text-white font-bold py-2.5 px-6 rounded-lg transition shadow">Lanjutkan Pembayaran</a>
                         </div>
                     </div>
                 </div>
@@ -400,6 +404,53 @@ function renderOrders(container, bookings) {
     }
     html += `</div>`;
 
+    // 3. Tab content: Dibatalkan / Gagal
+    html += `<div id="tabContent_batal" class="tab-pane flex flex-col gap-4 hidden">`;
+    if (cancelledBookings.length === 0) {
+        html += `
+            <div class="bg-white/40 border border-gray-200 rounded-2xl p-8 text-center text-gray-500">
+                Tidak ada pesanan yang dibatalkan.
+            </div>
+        `;
+    } else {
+        cancelledBookings.forEach(b => {
+            const isCorp = !!b.corporate_package_id;
+            const unit = isCorp ? (b.corporate_package || b.corporatePackage || {}) : (b.accommodation || {});
+            let rawImg = unit.gambar;
+            if (Array.isArray(rawImg) && rawImg.length > 0) rawImg = rawImg[0];
+            const imgPath = rawImg ? (rawImg.startsWith('http') || rawImg.startsWith('data:') ? rawImg : '/' + rawImg) : '/images/akomodasi/cabin1/a.webp';
+            const dateStr = `${formatDateFriendly(b.check_in_date)} - ${formatDateFriendly(b.check_out_date)}`;
+            const paxText = isCorp && b.jumlah_pax ? ` (${b.jumlah_pax} pax)` : '';
+            const itemTitle = (unit.judul || 'Akomodasi') + paxText;
+            const statusLabel = b.status === 'refunded' ? 'Dana Dikembalikan (Refund)' : 'Dibatalkan / Kedaluwarsa';
+
+            html += `
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden opacity-85">
+                    <div class="p-4 md:p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-stone-50">
+                        <div>
+                            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">${statusLabel}</div>
+                            <div class="text-sm font-semibold text-gray-700">No. Pesanan: ${b.no_pesanan}</div>
+                        </div>
+                        <span class="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-xs font-bold">Tidak Aktif</span>
+                    </div>
+                    <div class="p-4 md:p-6 flex flex-col md:flex-row gap-6">
+                        <img src="${imgPath}" alt="${itemTitle}" class="w-full md:w-48 h-32 object-cover rounded-xl shrink-0 grayscale-[35%]">
+                        <div class="flex-1">
+                            <h4 class="text-xl font-bold text-gray-800 mb-2">${itemTitle}</h4>
+                            <div class="text-sm text-gray-500 space-y-1 mb-4">
+                                <div class="flex gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> ${dateStr} (${b.malam} Malam)</div>
+                                <div class="flex gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg> ${b.nama_tamu}</div>
+                                <div class="flex gap-2 font-semibold text-gray-500"><iconify-icon icon="lucide:credit-card" class="mt-0.5"></iconify-icon> Metode: ${b.metode_pembayaran || '-'}</div>
+                            </div>
+                            <div class="text-lg font-bold text-gray-500">${formatPrice(b.total)}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    html += `</div>`;
+
     container.innerHTML = html;
 
     // Setup Tabs Logic
@@ -454,7 +505,8 @@ function initCountdownTimers() {
             } else {
                 createdTime = new Date(createdStr.replace(/-/g, '/')).getTime();
             }
-            const expireTime = createdTime + 30 * 60 * 1000; // 30 minutes expiration
+            // Batas waktu pembayaran 24 jam sejak pesanan dibuat
+            const expireTime = createdTime + 24 * 60 * 60 * 1000;
             const now = new Date().getTime();
             const remaining = expireTime - now;
 
@@ -466,7 +518,7 @@ function initCountdownTimers() {
                     pill.classList.add('bg-gray-100', 'text-gray-500');
                 }
 
-                // Automatically mark as failed in the database upon expiration
+                // Automatically mark as failed in the database upon expiration (after 24 hours)
                 if (el.getAttribute('data-expired-triggered') !== 'true') {
                     el.setAttribute('data-expired-triggered', 'true');
                     
@@ -483,16 +535,16 @@ function initCountdownTimers() {
                     })
                     .then(response => response.json())
                     .then(data => {
-                        console.log('Booking automatically cancelled due to timeout:', data);
-                        window.location.reload();
+                        console.log('Booking automatically cancelled due to 24h timeout:', data);
                     })
                     .catch(err => console.error('Failed to auto-cancel:', err));
                 }
             } else {
                 activeTimers++;
-                const mins = String(Math.floor(remaining / (1000 * 60))).padStart(2, '0');
+                const hours = String(Math.floor(remaining / (1000 * 60 * 60))).padStart(2, '0');
+                const mins = String(Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
                 const secs = String(Math.floor((remaining % (1000 * 60)) / 1000)).padStart(2, '0');
-                el.textContent = `00:${mins}:${secs}`;
+                el.textContent = `${hours}:${mins}:${secs}`;
             }
         });
 

@@ -44,14 +44,16 @@ class AppServiceProvider extends ServiceProvider
         });
         // Auto-expire pending bookings older than 30 minutes without needing a Cron job
         // It runs once per minute on any request to keep the database clean
-        if (!$this->app->runningInConsole() && !\Illuminate\Support\Facades\Cache::has('booking_cleanup')) {
+        if (!$this->app->runningInConsole()) {
             try {
-                \App\Models\Booking::where('status', 'pending')
-                    ->where('created_at', '<', now()->subMinutes(30))
-                    ->update(['status' => 'failed']);
-                \Illuminate\Support\Facades\Cache::put('booking_cleanup', true, 60); // cache for 60 seconds
-            } catch (\Exception $e) {
-                // Ignore DB errors during initial setup/migration
+                if (!\Illuminate\Support\Facades\Cache::has('booking_cleanup')) {
+                    \App\Models\Booking::where('status', 'pending')
+                        ->where('created_at', '<', now()->subMinutes(30))
+                        ->update(['status' => 'failed']);
+                    \Illuminate\Support\Facades\Cache::put('booking_cleanup', true, 60); // cache for 60 seconds
+                }
+            } catch (\Throwable $e) {
+                // Ignore DB/Cache errors safely (e.g. during initial setup/migration or if DB connection drops)
             }
         }
     }

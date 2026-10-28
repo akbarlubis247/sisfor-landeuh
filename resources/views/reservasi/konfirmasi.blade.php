@@ -252,8 +252,10 @@
     font-weight:700;cursor:pointer;border:none;transition:all .2s;
     display:flex;align-items:center;gap:.5rem;
 }
-.cp-btn-reschedule{border:1px solid #e6a645;color:#b8860b}
-.cp-btn-reschedule:hover{background:rgba(230,166,69,0.15)}
+.cp-btn-cancel{background:#3a523a;color:#fff}
+.cp-btn-cancel:hover{background:#2c402c}
+.cp-btn-reschedule{background:#3a523a;color:#fff}
+.cp-btn-reschedule:hover{background:#2c402c}
 .cp-btn-home{background:#3a523a;color:#fff}
 .cp-btn-home:hover{background:#2c402c}
 
@@ -405,7 +407,7 @@
     {{-- ── Top Bar ── --}}
     <div class="cp-topbar">
         <div class="cp-booking-no">
-            No. Pemesanan: <span id="dynBookingNo">XXXXXXXXXX</span>
+            No. Pemesanan: <span id="dynBookingNo">{{ $booking->no_pesanan ?? 'LDH-ONLINE' }}</span>
         </div>
         <img src="{{ asset('images/logo-landeuh.png') }}" alt="Landeuh Village" style="height:42px">
     </div>
@@ -416,7 +418,7 @@
         {{-- Email banner --}}
         <div class="cp-email-banner">
             <span id="dynEmailBannerText">
-                Cek emailmu (<strong><span id="dynEmailInBanner">xxxxxx@gmail.com</span></strong>)
+                Cek emailmu (<strong><span id="dynEmailInBanner">{{ $booking->pemesan_email ?? 'tamu@landeuh.com' }}</span></strong>)
                 sekarang untuk konfirmasi pembayaran.
             </span>
             {{-- Tombol PDF hanya tampil saat berhasil (ditampilkan via JS) --}}
@@ -452,8 +454,8 @@
                     <div class="cp-box">
                         <div class="cp-box-title">Kebijakan</div>
                         <div class="cp-policy">
-                            <p>Pemesanan hanya dapat dijadwalkan ulang (reschedule) dan tidak dapat dibatalkan.</p>
-                            <p>Pembayaran yang telah dilakukan tidak dapat dikembalikan (non-refundable).</p>
+                            <p>Pemesanan ini tidak dapat diubah</p>
+                            <p>Pemesanan tidak ada refund jika Anda membatalkannya</p>
                         </div>
                     </div>
 
@@ -555,13 +557,13 @@
 
         {{-- Bottom actions --}}
         <div class="cp-actions">
-            <button class="cp-btn cp-btn-reschedule" id="btnAjukanReschedule" onclick="ajukanReschedule()">
+            <button class="cp-btn cp-btn-cancel" id="btnAjukanPembatalan" onclick="ajukanPembatalan()">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                      stroke-width="2" stroke="currentColor" width="16" height="16">
                     <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                          d="M6 18L18 6M6 6l12 12"/>
                 </svg>
-                Ajukan Re-schedule
+                Ajukan Pembatalan
             </button>
             <button class="cp-btn cp-btn-home" onclick="window.location.href='/'">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -678,6 +680,28 @@
             Pengajuan reschedule hanya dapat dilakukan minimal <strong>H-3</strong> sebelum tanggal check-in awal pesanan Anda.
         </p>
         <button class="modal-btn-close" onclick="closeModalRescheduleError()" style="background:#e2e8f0;color:#475569;font-weight:bold;padding:.6rem 1.5rem;border-radius:.5rem;border:none;cursor:pointer;margin-top:1rem;transition:.2s;">Tutup</button>
+    </div>
+</div>
+
+{{-- Modal Pembatalan --}}
+<div class="modal-overlay" id="modalPembatalan">
+    <div class="modal-box">
+        <div class="modal-icon" style="background:#ef4444; width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.2rem;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+        </div>
+        <h3 class="modal-title">Pengajuan Pembatalan</h3>
+        <p class="modal-desc">
+            Untuk membatalkan pesanan, silakan hubungi admin Landeuh Village Riverside melalui WhatsApp.
+        </p>
+        <button class="modal-btn-wa" onclick="window.open('https://wa.me/6285779012797?text=Halo%20Admin%2C%20saya%20ingin%20mengonfirmasi%20pembatalan%20pesanan%20saya.%20No.%20Pemesanan%3A%20' + encodeURIComponent(document.getElementById('dynBookingNo').textContent), '_blank')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Hubungi Admin via WhatsApp
+        </button>
+        <button class="modal-btn-close" onclick="closeModalPembatalan()" style="background:#e2e8f0;color:#475569;font-weight:bold;padding:.6rem 1.5rem;border-radius:.5rem;border:none;cursor:pointer;margin-top:1rem;transition:.2s;">Tutup</button>
     </div>
 </div>
 
@@ -808,10 +832,11 @@
     const dMalam   = parseInt(sessionStorage.getItem('res_malam')) || 1;
 
     // Kirim update status ke database MySQL secara real-time
-    const selectedMethod = sessionStorage.getItem('res_va') 
+    const selectedMethod = sessionStorage.getItem('res_wallet')
+                        || sessionStorage.getItem('res_va') 
                         || sessionStorage.getItem('res_payment_method') 
                         || sessionStorage.getItem('res_minimarket') 
-                        || 'Virtual Account';
+                        || 'E-Wallet';
 
     // Only send update if NOT from pesanan history page AND NOT from Midtrans redirect
     // (Midtrans redirect status is already handled by the updateBookingStatus in metode.blade.php or by Midtrans notification)
@@ -898,37 +923,19 @@
             </svg>`;
 
         titleEl.textContent = 'Pembayaran Berhasil';
+        amountEl.classList.remove('amount-failed');
         amountEl.classList.add('amount-success');
 
-        document.getElementById('btnUnduhPdf').style.display = 'flex';
+        const pdfBtn = document.getElementById('btnUnduhPdf');
+        if (pdfBtn) pdfBtn.style.display = 'flex';
         
-        bannerText.innerHTML = `Pembayaran berhasil! Invoice telah dikirim ke email (<strong><span id="dynEmailInBanner">${dEmail}</span></strong>) dan WhatsApp Anda.`;
-
-        // Show/hide reschedule button based on sub-status
-        const btnResched = document.getElementById('btnAjukanReschedule');
-        if (btnResched) {
-            if (status === 'reschedule_pending') {
-                btnResched.disabled = true;
-                btnResched.style.opacity = '0.5';
-                btnResched.style.cursor = 'not-allowed';
-                btnResched.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Menunggu Konfirmasi`;
-                bannerText.innerHTML = `Pemesanan ini sedang dalam pengajuan reschedule. Silakan tunggu konfirmasi admin.`;
-            } else if (status === 'rescheduled') {
-                btnResched.style.display = 'none'; // Or disable it depending on logic, but hiding might be okay if they already got it rescheduled
-                bannerText.innerHTML = `Jadwal baru Anda telah disetujui oleh admin.`;
-            } else if (status === 'reschedule_rejected') {
-                btnResched.style.display = 'flex';
-                bannerText.innerHTML = `Pengajuan reschedule Anda ditolak. Anda dapat mengajukan ulang.`;
-            } else {
-                btnResched.style.display = 'flex';
-            }
-        }
+        bannerText.innerHTML = `Cek emailmu (<strong><span id="dynEmailInBanner">${dEmail}</span></strong>) sekarang untuk konfirmasi pembayaran.`;
 
         // Activate continuous pulse after entrance finishes
         setTimeout(() => iconWrap.classList.add('pulse'), 700);
 
     } else {
-        // Icon: red cross
+        // Icon: red cross (Pembayaran Gagal)
         iconWrap.className = 'cp-icon-wrap cp-icon-failed';
         iconWrap.innerHTML = `
             <svg width="44" height="44" viewBox="0 0 44 44" fill="none"
@@ -939,21 +946,17 @@
             </svg>`;
 
         titleEl.textContent = 'Pembayaran Gagal';
+        amountEl.classList.remove('amount-success');
         amountEl.classList.add('amount-failed');
+
+        const pdfBtn = document.getElementById('btnUnduhPdf');
+        if (pdfBtn) pdfBtn.style.display = 'none';
+
+        // Banner text untuk gagal:
+        bannerText.innerHTML = `Cek emailmu (<strong><span id="dynEmailInBanner">${dEmail}</span></strong>) sekarang untuk detail cara bayar.`;
 
         // Activate continuous pulse after entrance finishes
         setTimeout(() => iconWrap.classList.add('pulse'), 800);
-
-        // Banner text untuk gagal
-        if (fromPesanan) {
-            bannerText.innerHTML = `Pemesanan ini berstatus gagal/dibatalkan.`;
-        } else {
-            bannerText.innerHTML = `Cek emailmu (<strong>${dEmail}</strong>) sekarang untuk detail cara bayar.`;
-        }
-        
-        // Hide reschedule button
-        const btnResched = document.getElementById('btnAjukanReschedule');
-        if (btnResched) btnResched.style.display = 'none';
     }
 
     // ── Accommodation / Corporate Package data ────────────────────────────
@@ -1354,7 +1357,20 @@ function closeModalRescheduleError() {
     document.getElementById('modalRescheduleError').classList.remove('active');
 }
 
+function ajukanPembatalan() {
+    const modal = document.getElementById('modalPembatalan');
+    if (modal) modal.classList.add('active');
+}
+
+function closeModalPembatalan() {
+    const modal = document.getElementById('modalPembatalan');
+    if (modal) modal.classList.remove('active');
+}
+
 // Close modals on overlay click
+document.getElementById('modalPembatalan')?.addEventListener('click', function(e) {
+    if (e.target === this) closeModalPembatalan();
+});
 document.getElementById('modalReschedule')?.addEventListener('click', function(e) {
     if (e.target === this) closeModalReschedule();
 });
